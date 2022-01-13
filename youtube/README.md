@@ -1,6 +1,6 @@
 # YouTube Pipeline
-## Place useful information in Notes
-## Please document major developments in Updates
+Place useful information in Notes
+Please document major developments in Updates
 
 # Notes
 [Youtube API Documentation](https://developers.google.com/youtube/v3/getting-started)

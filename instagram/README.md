@@ -1,6 +1,6 @@
 # Instagram Pipeline
-## Place useful information in Notes
-## Please document major developments in Updates
+Place useful information in Notes
+Please document major developments in Updates
 
 # Notes
 [Instagram API Documentation](https://developers.facebook.com/docs/instagram-api/overview)

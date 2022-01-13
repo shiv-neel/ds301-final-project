@@ -1,6 +1,6 @@
 # Twitch Pipeline
-## Place useful information in Notes
-## Please document major developments in Updates
+Place useful information in Notes
+Please document major developments in Updates
 
 # Notes
 [Twitch API Documentation](https://dev.twitch.tv/docs/api/reference)
