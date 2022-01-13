@@ -11,6 +11,7 @@ If you need some help figuring out how to get started, are stuck, or just someon
 Please place "DONE" by your name under the task when you're comfortable with what you've learned.
 - Learned Docker with Python3
   - Someone
+  - Gen / Kingsley = I have basic understanding, I will probably read up on more in the weekend if I have time!
 
 
 # Development Tasks
@@ -19,22 +20,22 @@ Please place "DONE" by your name under the task when you're comfortable with wha
   - Twitch (Bhuwan)
   - Youtube
   - Twitter
-  - Instagram
-  - Facebook
+  - Instagram (Kingsley / Gen)
+  - Facebook (Kingsley / Gen)
   - TikTok
 - Identify user interaction metrics (likes, retweets, etc if applicable):
   - Twitch (Bhuwan)
   - Youtube
   - Twitter
-  - Instagram
-  - Facebook
+  - Instagram (Kingsley / Gen)
+  - Facebook (Kingsley / Gen)
   - TikTok
 - Identify user success metrics (followers, total views, etc if applicable):
   - Twitch (Bhuwan)
   - Youtube
   - Twitter
-  - Instagram
-  - Facebook
+  - Instagram (Kingsley / Gen)
+  - Facebook (Kingsley / Gen)
   - TikTok
 - Create Python ORM (SQL Alchemy) for databases (Yarles)
 - Create Dockerfiles (Yarles)
