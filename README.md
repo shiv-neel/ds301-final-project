@@ -3,9 +3,10 @@ Python scripts for gathering and storing data from various social media platform
 
 If you need some help figuring out how to get started, are stuck, or just someone to talk to, feel free to contact Yarles. My Discord is Yarles404#1565, phone # is 515-559-3423. In the future, there should be a dedicated Discord server, and perhaps a Scrum Board.
 #### Please Do:
-Place (your name) next to tasks you've started
-Place "DONE" when completed AND reviewed by Yarles
-
+1. Place (your name) next to tasks you've started
+2. Whenever you start a task, create a new branch: git branch descriptive-branch-name
+   - Remember to checkout your new branch: git checkout descriptive-branch-name
+3. Place "DONE" when completed AND reviewed by Yarles
 # Professional Development Tasks
 Please place "DONE" by your name under the task when you're comfortable with what you've learned.
 - Learned Docker with Python3
