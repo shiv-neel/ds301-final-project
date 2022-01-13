@@ -49,6 +49,7 @@ Please place "DONE" by your name under the task when you're comfortable with wha
 # Notes
 - Will use PostgreSQL database to store metrics
 - Python scripts will most likely run on AWS Lambda
+- API Keys are stored as [GitHub secrets](https://docs.github.com/en/actions/security-guides/encrypted-secrets) and will be available as an environment variable in the repository.
 
 # Updates
 ## 2022-01-12
