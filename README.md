@@ -18,7 +18,7 @@ Please place "DONE" by your name under the task when you're comfortable with wha
 - Place platform-specific notes in respective folder READMEs
 - Verify usability of APIs and create sample script:
   - Twitch (Bhuwan)
-  - Youtube
+  - Youtube (Shiv)
   - Twitter
   - Instagram (Kingsley / Gen)
   - Facebook 
@@ -35,7 +35,7 @@ Please place "DONE" by your name under the task when you're comfortable with wha
   - Youtube
   - Twitter
   - Instagram (Kingsley / Gen)
-  - Facebook 
+  - Facebook (Shiv)
   - TikTok (Kingsley / Gen)
 - Create Python ORM (SQL Alchemy) for databases (Yarles)
 - Create Dockerfiles (Yarles)
