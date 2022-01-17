@@ -21,22 +21,22 @@ Please place "DONE" by your name under the task when you're comfortable with wha
   - Youtube
   - Twitter
   - Instagram (Kingsley / Gen)
-  - Facebook (Kingsley / Gen)
-  - TikTok
+  - Facebook 
+  - TikTok (Kingsley / Gen)
 - Identify user interaction metrics (likes, retweets, etc if applicable):
   - Twitch (Bhuwan)
   - Youtube
   - Twitter
   - Instagram (Kingsley / Gen)
-  - Facebook (Kingsley / Gen)
-  - TikTok
+  - Facebook 
+  - TikTok (Kingsley / Gen)
 - Identify user success metrics (followers, total views, etc if applicable):
   - Twitch (Bhuwan)
   - Youtube
   - Twitter
   - Instagram (Kingsley / Gen)
-  - Facebook (Kingsley / Gen)
-  - TikTok
+  - Facebook 
+  - TikTok (Kingsley / Gen)
 - Create Python ORM (SQL Alchemy) for databases (Yarles)
 - Create Dockerfiles (Yarles)
 
