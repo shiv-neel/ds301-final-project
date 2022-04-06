@@ -1,0 +1,98 @@
+---
+title: "FinalProject"
+author: "Ryan S, Ryan M, Shiv, Saketh"
+date: "4/5/2022"
+output: html_document
+---
+
+## Preliminary Exploratory
+
+```{r}
+cbb = read.csv("C:/Users/ryanm/Documents/Class Documents/Junior/Semester 2/DS 301/Project/cbb.csv",header=TRUE)
+head(cbb,10)
+```
+
+What each columns means: 
+
+1. TEAM - the college backetball team <br/>
+2. CONF - the conference the team plays in <br/>
+3. G - number of games they played <br/>
+4. W - number of games they won <br/>
+5. ADJOE - adjusted offensive efficiency (an estimate of the offensive efficiency, points scored per 100 possessions a team would have against the average Division I defense) <br/>
+6. ADJDE - adjusted defensive efficiency (an estimate of the defensive efficiency, points allowed per 100 possessions a team would have against the average Division I offense) <br/>
+7. BARTHAG: Power Rating (Chance of beating an average Division I team) <br/>
+8. EFG_O: Effective Field Goal Percentage Shot <br/>
+9. EFG_D: Effective Field Goal Percentage Allowed <br/>
+10. TOR: Turnover Percentage Allowed (Turnover Rate) <br/>
+11. TORD: Turnover Percentage Committed (Steal Rate) <br/>
+12. ORB: Offensive Rebound Rate <br/>
+13. DRB: Offensive Rebound Rate Allowed <br/>
+14. FTR : Free Throw Rate (How often the given team shoots Free Throws) <br/>
+15. FTRD: Free Throw Rate Allowed <br/>
+16. X2P_O: Two-Point Shooting Percentage <br/>
+17. X2P_D: Two-Point Shooting Percentage Allowed <br/>
+18. X3P_O: Three-Point Shooting Percentage <br/>
+19. X3P_D: Three-Point Shooting Percentage Allowed <br/>
+20. ADJ_T: Adjusted Tempo (An estimate of the tempo, possessions per 40 minutes, a team would have against the team that wants to play at an average Division I tempo) <br/>
+21. WAB: Wins Above Bubble (The bubble refers to the cut off between making the NCAA March Madness Tournament and not making it) <br/>
+22. POSTSEASON: Round where the given team was eliminated or where their season ended (R68 = First Four, R64 = Round of 64, R32 = Round of 32, S16 = Sweet Sixteen, E8 = Elite Eight, F4 = Final Four, 2ND = Runner-up, Champion = Winner of the NCAA March Madness Tournament for that given year) <br/>
+23. SEED: Seed in the NCAA March Madness Tournament
+24. YEAR: Season's calendar year
+
+**Looking at Linear Regression with Wins as response**
+
+```{r}
+cbb2=cbb[3:21] #looking at wins, don't want to factor in team name, postseason finish, seed, or year
+pred_W_model = lm(W~., data=cbb2)
+summary(pred_W_model)
+```
+
+From initial findings, it looks like BARTHAG, X2P_O, X2P_D, X3P_O, and X3P_D all have the greatest <br/>
+influence on predicting team success. But clearly there are to many other predictors involved creating lots of unnecessary noise and limiting the overall usefulness of a lm model with all these predictors. So next we'll take a look at just those 5 predictors and the response as Wins.
+
+
+**Looking more closely at Wins models**
+
+```{r}
+pred_W_model2 = lm(W~BARTHAG+X2P_O+X2P_D+X3P_O+X3P_D, data=cbb2)
+summary(pred_W_model2)
+```
+
+The r-squared dropped a lot, but that is expected with how many predictors were taken out. The idea that these 5 predictors were some of the most important is true because while the r squared isn't as high, it's still reasonably good. 
+
+
+**Looking at some Win graphs**
+
+```{r}
+library(ggplot2)
+ggplot(cbb, aes(X3P_D, W, colour=G)) + geom_point()
+```
+
+It looks like there is some correlation between the expected 3 point defense and wins, meaning that the less 3 pointers a team allows, the more games they would be expected to win. 
+
+
+```{r}
+ggplot(cbb, aes(x=W)) + geom_histogram(binwidth=1, color="red")
+```
+
+Here is a graph showing the distribution of wins among all the teams. This helps give an idea of how many
+wins most teams have and what a low and high amount of wins is.
+
+
+
+```{r}
+cor(cbb[,unlist(lapply(cbb, is.numeric))])
+```
+
+
+**Potential Problems**
+
+The most obvious potential problem is how the postseason column uses letter and number combinations 
+so that makes it useless for any regression models because it takes each different column term (Champion, 2nd, F4, E8 S16, R32, R64) and treats it as it's own predictor, when really it'd be better off if each of 
+those were just a numerical value associated with how the team finished. This is a change we can implement
+ourselves and allow us to see if the column is a valuable predictor in determining the number of games a team
+wins. 
+
+
+
+
