@@ -11,6 +11,9 @@ df[is.na(df)] <- -1
 sum(is.na(df))
 df$teamYear = paste(df$TEAM, df$YEAR)
 head(df)
+
+df2<- df[-c(1,24)]
+head(df2)
 ```
 
 ```{r}
