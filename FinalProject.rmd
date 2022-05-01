@@ -47,8 +47,7 @@ pred_W_model = lm(W~., data=cbb2)
 summary(pred_W_model)
 ```
 
-From initial findings, it looks like BARTHAG, X2P_O, X2P_D, X3P_O, and X3P_D all have the greatest <br/>
-influence on predicting team success. But clearly there are to many other predictors involved creating lots of unnecessary noise and limiting the overall usefulness of a lm model with all these predictors. So next we'll take a look at just those 5 predictors and the response as Wins.
+ influence on predicting team success. But clearly there are to many other predictors involved creating lots of unnecessary noise and limiting the overall usefulness of a lm model with all these predictors. So next we'll take a look at just those 5 predictors and the response as Wins.
 
 
 **Looking more closely at Wins models**

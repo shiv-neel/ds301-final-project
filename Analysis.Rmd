@@ -6,7 +6,11 @@ output: html_document
 ---
 
 ```{r}
-df = na.omit(read.csv('./cbb.csv'))
+df = read.csv('./cbb.csv')
+df[is.na(df)] <- -1
+sum(is.na(df))
+df$teamYear = paste(df$TEAM, df$YEAR)
+head(df)
 ```
 
 ```{r}
