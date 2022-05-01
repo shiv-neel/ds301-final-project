@@ -1,0 +1,53 @@
+---
+title: "CBB_Analysis"
+author: "Shiva Neelakantan"
+date: '2022-05-01'
+output: html_document
+---
+
+```{r}
+df = na.omit(read.csv('./cbb.csv'))
+```
+
+```{r}
+library(leaps)
+library(ggplot2)
+library(VIM)
+library(cluster)
+library(dplyr)
+```
+
+```{r}
+df = df %>% filter(YEAR < 2019) %>% mutate(WinRate = W/G)
+for (i in 1:length(df$POSTSEASON)) {
+  if (df$POSTSEASON[i] == 'Champions')
+    df$POSTSEASON[i] = 0
+  else if (df$POSTSEASON[i] == '2ND')
+    df$POSTSEASON[i] = 1
+  else if (df$POSTSEASON[i] == 'F4')
+    df$POSTSEASON[i] = 2
+  else if (df$POSTSEASON[i] == 'E8')
+    df$POSTSEASON[i] = 3
+  else if (df$POSTSEASON[i] == 'S16')
+    df$POSTSEASON[i] = 4
+  else if (df$POSTSEASON[i] == 'R32')
+    df$POSTSEASON[i] = 5
+  else if (df$POSTSEASON[i] == 'R64')
+    df$POSTSEASON[i] = 6
+  else df$POSTSEASON[i] = 7
+}
+df$SEED[is.na(df$SEED)] = 0
+```
+
+creating training and test sets
+```{r}
+df.train = df %>% filter(YEAR != 2018)
+df.test = df %>% filter(YEAR == 2018)
+```
+
+```{r}
+k = 5
+forward = regsubsets(WinRate~., df, nvmax=24, method='forward')
+summary(forward)
+```
+
