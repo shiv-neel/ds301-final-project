@@ -25,20 +25,20 @@ library(dplyr)
 df = df %>% mutate(WinRate = W/G)
 for (i in 1:length(df$POSTSEASON)) {
   if (df$POSTSEASON[i] == 'Champions')
-    df$POSTSEASON[i] = 0
+    df$POSTSEASON[i] = 1
   else if (df$POSTSEASON[i] == '2ND')
     df$POSTSEASON[i] = 1
   else if (df$POSTSEASON[i] == 'F4')
-    df$POSTSEASON[i] = 2
+    df$POSTSEASON[i] = 1
   else if (df$POSTSEASON[i] == 'E8')
-    df$POSTSEASON[i] = 3
+    df$POSTSEASON[i] = 1
   else if (df$POSTSEASON[i] == 'S16')
-    df$POSTSEASON[i] = 4
+    df$POSTSEASON[i] = 1
   else if (df$POSTSEASON[i] == 'R32')
-    df$POSTSEASON[i] = 5
+    df$POSTSEASON[i] = 1
   else if (df$POSTSEASON[i] == 'R64')
-    df$POSTSEASON[i] = 6
-  else df$POSTSEASON[i] = 7
+    df$POSTSEASON[i] = 1
+  else df$POSTSEASON[i] = 0
 }
 df$SEED[is.na(df$SEED)] = 0
 ```
@@ -52,6 +52,60 @@ test = df[-trainIdx,]
 
 ```
 
+
+# Q1 logistic regression
+```{r}
+library(MASS)
+set.seed(7)
+
+df2 <- df[5:22]
+df2$WinRate=df$WinRate
+df2$POSTSEASON=as.numeric(df2$POSTSEASON)
+df2$SEED=df$SEED
+
+train_index = sample(1:nrow(df2),nrow(df2)/4, replace=FALSE)
+test_index = -train_index
+train = df2[train_index,]
+test = df2[-train_index,]
+
+#got these from subset regression RSS
+glm.fit = glm(POSTSEASON~BARTHAG+ADJOE+ADJDE+EFG_O+EFG_D+TOR+TORD+ORB+DRB+FTR+X3P_D+ADJ_T, data=df2, subset=train_index, family='binomial')
+summary(glm.fit)
+
+#glm.fit2 = glm(POSTSEASON~BARTHAG+ADJOE+ADJDE+TOR+FTR, data=df2, subset=train_index, family='binomial')
+#summary(glm.fit2)
+```
+
+```{r}
+glm.prob = predict(glm.fit, test,type='response') 
+glm.pred = rep(0,nrow(test))
+
+#glm.pred
+glm.pred[glm.prob >0.5] = 1
+
+table(glm.pred,test$POSTSEASON) #rows are predicted, # columns are true 
+# This matrix is called our confusion matrix
+
+#test
+#test$POSTSEASON
+#glm.pred
+
+# what is our misclassification rate? 
+1-mean(glm.pred == test$POSTSEASON)
+```
+
+# Q1 QDA
+```{r}
+qda.fit = qda(POSTSEASON~BARTHAG+ADJOE+ADJDE+TOR+FTR, data=df2, subset=train_index)
+summary(qda.fit)
+
+qda.pred = predict(qda.fit,test)
+table(qda.pred$class,test$POSTSEASON)
+
+mean(qda.pred$class==test$POSTSEASON)
+```
+
+# Q2 Subset Selection
 ```{r}
 forward = regsubsets(WinRate~BARTHAG+ADJOE+ADJDE+EFG_O+EFG_D+TOR+TORD+ORB+DRB+FTR+X2P_O+X2P_D+X3P_O+X3P_D+ADJ_T+SEED, data=df, nvmax=24, method='forward')
 forward.summary = summary(forward)
@@ -67,4 +121,21 @@ min(forward.rss)
 forward.aic
 min(forward.bic)
 forward.bic
+```
+
+```{r}
+backward = regsubsets(WinRate~BARTHAG+ADJOE+ADJDE+EFG_O+EFG_D+TOR+TORD+ORB+DRB+FTR+X2P_O+X2P_D+X3P_O+X3P_D+ADJ_T+SEED, data=df, nvmax=24, method='backward')
+backward.summary = summary(backward)
+backward.summary
+n = dim(df)[1]
+p = rowSums(backward.summary$which)
+backward.rss = backward.summary$rss
+backward.aic = n * log(backward.rss/n) + 2*p
+backward.bic = n * log(backward.rss/n) + p*log(n)
+plot(backward.rss)
+plot(backward.bic)
+min(backward.rss)
+backward.aic
+min(backward.bic)
+backward.bic
 ```
