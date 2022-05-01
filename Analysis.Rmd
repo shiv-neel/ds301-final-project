@@ -11,9 +11,6 @@ df[is.na(df)] <- -1
 sum(is.na(df))
 df$teamYear = paste(df$TEAM, df$YEAR)
 head(df)
-
-df2<- df[-c(1,24)]
-head(df2)
 ```
 
 ```{r}
@@ -25,7 +22,7 @@ library(dplyr)
 ```
 
 ```{r}
-df = df %>% filter(YEAR < 2019) %>% mutate(WinRate = W/G)
+df = df %>% mutate(WinRate = W/G)
 for (i in 1:length(df$POSTSEASON)) {
   if (df$POSTSEASON[i] == 'Champions')
     df$POSTSEASON[i] = 0
@@ -48,13 +45,26 @@ df$SEED[is.na(df$SEED)] = 0
 
 creating training and test sets
 ```{r}
-df.train = df %>% filter(YEAR != 2018)
-df.test = df %>% filter(YEAR == 2018)
+set.seed(7)
+trainIdx = sample(1:nrow(df),nrow(df)/2, replace=FALSE)
+train = df[trainIdx,]
+test = df[-trainIdx,]
+
 ```
 
 ```{r}
-k = 5
-forward = regsubsets(WinRate~., df, nvmax=24, method='forward')
-summary(forward)
+forward = regsubsets(WinRate~BARTHAG+ADJOE+ADJDE+EFG_O+EFG_D+TOR+TORD+ORB+DRB+FTR+X2P_O+X2P_D+X3P_O+X3P_D+ADJ_T+SEED, data=df, nvmax=24, method='forward')
+forward.summary = summary(forward)
+forward.summary
+n = dim(df)[1]
+p = rowSums(forward.summary$which)
+forward.rss = forward.summary$rss
+forward.aic = n * log(forward.rss/n) + 2*p
+forward.bic = n * log(forward.rss/n) + p*log(n)
+plot(forward.rss)
+plot(forward.bic)
+min(forward.rss)
+forward.aic
+min(forward.bic)
+forward.bic
 ```
-
