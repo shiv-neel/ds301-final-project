@@ -1,6 +1,6 @@
 ---
 title: "CBB_Analysis"
-author: "Shiva Neelakantan"
+author: "Shiva Neelakantan, Ryan Scehovic, Ryan McNally, Saketh Jonnadula"
 date: '2022-05-01'
 output: html_document
 ---
@@ -19,6 +19,7 @@ library(ggplot2)
 library(VIM)
 library(cluster)
 library(dplyr)
+library(ROCR)
 ```
 
 ```{r}
@@ -79,42 +80,137 @@ hist(df$WAB)
 ```{r}
 library(MASS)
 set.seed(7)
-
 df2 <- df[5:22]
 df2$WinRate=df$WinRate
 df2$POSTSEASON=as.numeric(df2$POSTSEASON)
 df2$SEED=df$SEED
-
 train_index = sample(1:nrow(df2),nrow(df2)/4, replace=FALSE)
 test_index = -train_index
 train = df2[train_index,]
 test = df2[-train_index,]
-
-#got these from subset regression RSS
-glm.fit = glm(POSTSEASON~BARTHAG+ADJOE+ADJDE+EFG_O+EFG_D+TOR+TORD+ORB+DRB+FTR+X3P_D+ADJ_T, data=df2, subset=train_index, family='binomial')
+head(df2)
+glm.fit = glm(POSTSEASON~ADJOE+ADJDE+EFG_O+EFG_D+TOR+TORD+ORB+DRB+FTR+FTRD+X2P_O+X2P_D+X3P_O+X3P_D+ADJ_T, data=df2, subset=train_index, family='binomial')
 summary(glm.fit)
-
-#glm.fit2 = glm(POSTSEASON~BARTHAG+ADJOE+ADJDE+TOR+FTR, data=df2, subset=train_index, family='binomial')
-#summary(glm.fit2)
 ```
 
 ```{r}
 glm.prob = predict(glm.fit, test,type='response') 
 glm.pred = rep(0,nrow(test))
-
 #glm.pred
 glm.pred[glm.prob >0.5] = 1
-
 table(glm.pred,test$POSTSEASON) #rows are predicted, # columns are true 
 # This matrix is called our confusion matrix
-
 #test
 #test$POSTSEASON
 #glm.pred
-
 # what is our misclassification rate? 
 1-mean(glm.pred == test$POSTSEASON)
+
+cMatrix=table(glm.pred,test$POSTSEASON)
+
+falsenegRate = cMatrix[1,2] / nrow(test)
+falsenegRate
+
+falseposRate = cMatrix[2,1] / nrow(test)
+falseposRate
+
+ROCRpred <- prediction(glm.prob,test$POSTSEASON)
+plot(performance(ROCRpred,'tpr','fpr'))
+plot(performance(ROCRpred,'tpr','fpr'),colorize=TRUE,
+     print.cutoffs.at=seq(0,1,by=0.05), text.adj=c(-0.2,1.7))
 ```
+
+
+TAKE OUT TRAIN/TEST SO IT DOESN'T REDO THE SETS EACH MODEL
+
+# Q1 logistic regression - offense only
+```{r}
+library(MASS)
+set.seed(7)
+df2 <- df[5:22]
+df2$WinRate=df$WinRate
+df2$POSTSEASON=as.numeric(df2$POSTSEASON)
+df2$SEED=df$SEED
+train_index = sample(1:nrow(df2),nrow(df2)/4, replace=FALSE)
+test_index = -train_index
+train = df2[train_index,]
+test = df2[-train_index,]
+#got these from subset regression RSS
+#ADJOE+ADJDE+EFG_O+EFG_D+TOR+TORD+ORB+DRB+FTR+FTRD+X2P_O+X2P_D+X3P_O+X3P_D+ADJ_T
+glm.fit = glm(POSTSEASON~ADJOE+EFG_O+TOR+ORB+FTR+X2P_O+X3P_O+ADJ_T, data=df2, subset=train_index, family='binomial')
+summary(glm.fit)
+
+glm.prob = predict(glm.fit, test,type='response') 
+glm.pred = rep(0,nrow(test))
+#glm.pred
+glm.pred[glm.prob >0.5] = 1
+table(glm.pred,test$POSTSEASON) #rows are predicted, # columns are true 
+# This matrix is called our confusion matrix
+#test
+#test$POSTSEASON
+#glm.pred
+# what is our misclassification rate? 
+1-mean(glm.pred == test$POSTSEASON)
+
+
+cMatrix=table(glm.pred,test$POSTSEASON)
+
+falsenegRate = cMatrix[1,2] / nrow(test)
+falsenegRate
+
+falseposRate = cMatrix[2,1] / nrow(test)
+falseposRate
+
+ROCRpred <- prediction(glm.prob,test$POSTSEASON)
+plot(performance(ROCRpred,'tpr','fpr'))
+plot(performance(ROCRpred,'tpr','fpr'),colorize=TRUE,
+     print.cutoffs.at=seq(0,1,by=0.05), text.adj=c(-0.2,1.7))
+```
+
+
+# Q1 logistic regression - defense only
+```{r}
+library(MASS)
+set.seed(7)
+df2 <- df[5:22]
+df2$WinRate=df$WinRate
+df2$POSTSEASON=as.numeric(df2$POSTSEASON)
+df2$SEED=df$SEED
+train_index = sample(1:nrow(df2),nrow(df2)/4, replace=FALSE)
+test_index = -train_index
+train = df2[train_index,]
+test = df2[-train_index,]
+#got these from subset regression RSS
+#ADJOE+ADJDE+EFG_O+EFG_D+TOR+TORD+ORB+DRB+FTR+FTRD+X2P_O+X2P_D+X3P_O+X3P_D+ADJ_T
+glm.fit = glm(POSTSEASON~ADJDE+EFG_D+TORD+DRB+FTRD+X2P_D+X3P_D, data=df2, subset=train_index, family='binomial')
+summary(glm.fit)
+
+glm.prob = predict(glm.fit, test,type='response') 
+glm.pred = rep(0,nrow(test))
+#glm.pred
+glm.pred[glm.prob >0.5] = 1
+table(glm.pred,test$POSTSEASON) #rows are predicted, # columns are true 
+# This matrix is called our confusion matrix
+#test
+#test$POSTSEASON
+#glm.pred
+# what is our misclassification rate? 
+1-mean(glm.pred == test$POSTSEASON)
+
+cMatrix=table(glm.pred,test$POSTSEASON)
+
+falsenegRate = cMatrix[1,2] / nrow(test)
+falsenegRate
+
+falseposRate = cMatrix[2,1] / nrow(test)
+falseposRate
+
+ROCRpred <- prediction(glm.prob,test$POSTSEASON)
+plot(performance(ROCRpred,'tpr','fpr'))
+plot(performance(ROCRpred,'tpr','fpr'),colorize=TRUE,
+     print.cutoffs.at=seq(0,1,by=0.05), text.adj=c(-0.2,1.7))
+```
+
 
 # Q1 QDA
 ```{r}
