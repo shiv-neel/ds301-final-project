@@ -107,7 +107,7 @@ mean(qda.pred$class==test$POSTSEASON)
 
 # Q2 Subset Selection
 ```{r}
-forward = regsubsets(WinRate~BARTHAG+ADJOE+ADJDE+EFG_O+EFG_D+TOR+TORD+ORB+DRB+FTR+X2P_O+X2P_D+X3P_O+X3P_D+ADJ_T+SEED, data=df, nvmax=24, method='forward')
+forward = regsubsets(WinRate~ADJOE+ADJDE+TOR+TORD+ORB+DRB+FTR+X2P_O+X2P_D+X3P_O+X3P_D+ADJ_T, data=df, nvmax=24, method='forward')
 forward.summary = summary(forward)
 forward.summary
 n = dim(df)[1]
@@ -124,7 +124,7 @@ forward.bic
 ```
 
 ```{r}
-backward = regsubsets(WinRate~BARTHAG+ADJOE+ADJDE+EFG_O+EFG_D+TOR+TORD+ORB+DRB+FTR+X2P_O+X2P_D+X3P_O+X3P_D+ADJ_T+SEED, data=df, nvmax=24, method='backward')
+backward = regsubsets(WinRate~ADJOE+ADJDE+TOR+TORD+ORB+DRB+FTR+X2P_O+X2P_D+X3P_O+X3P_D+ADJ_T, data=df, nvmax=24, method='backward')
 backward.summary = summary(backward)
 backward.summary
 n = dim(df)[1]
