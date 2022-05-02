@@ -51,7 +51,29 @@ train = df[trainIdx,]
 test = df[-trainIdx,]
 
 ```
+```{r}
+head(df)
 
+hist(df$G)
+hist(df$W)
+hist(df$ADJOE)
+hist(df$ADJDE)
+hist(df$BARTHAG)
+hist(df$EFG_O)
+hist(df$EFG_D)
+hist(df$TOR)
+hist(df$TORD)
+hist(df$ORB)
+hist(df$DRB)
+hist(df$FTR)
+hist(df$FTRD)
+hist(df$X2P_O)
+hist(df$X2P_D)
+hist(df$X3P_O)
+hist(df$X3P_D)
+hist(df$ADJ_T)
+hist(df$WAB)
+```
 
 # Q1 logistic regression
 ```{r}
