@@ -253,7 +253,7 @@ backward.bic
 ```
 
 ## Q2 -- MLR
-
+* NEED TO ADD CV*
 ```{r}
 mlr.model = lm(WinRate~ADJOE+ADJDE+TOR+TORD+ORB+DRB+FTR+X2P_O+X2P_D+X3P_O+X3P_D+ADJ_T,data=train)
 
