@@ -177,34 +177,44 @@ plot(performance(ROCRpred,'tpr','fpr'),colorize=TRUE,
 ```
 
 
-# Q1 QDA - offense + defense
+# Q1 - Testing for LDA Assumptions
 ```{r}
-qda.fit = qda(POSTSEASON~ADJOE+ADJDE+EFG_O+EFG_D+TOR+TORD+ORB+DRB+FTR+FTRD+X2P_O+X2P_D+X3P_O+X3P_D+ADJ_T, data=df2, subset=train_index)
-summary(qda.fit)
-qda.pred = predict(qda.fit,test)
-table(qda.pred$class,test$POSTSEASON)
-mean(qda.pred$class==test$POSTSEASON)
+#ADJOE+ADJDE+EFG_O+EFG_D+TOR+TORD+ORB+DRB+FTR+FTRD+X2P_O+X2P_D+X3P_O+X3P_D+ADJ_T
+
+CovMatrix <- cbind(df2$ADJOE, df2$ADJDE, df2$EFG_O, df2$EFG_D, df2$TOR, df2$TORD, df2$ORB, df2$DRB, df2$FTR, df2$FTRD,
+                   df2$X2P_O, df2$X2P_D, df2$X3P_O, df2$X3P_D, df2$ADJ_T)
+cov(CovMatrix)
+```
+
+# Q1 LDA - offense + defense
+```{r}
+lda.fit = lda(POSTSEASON~ADJOE+ADJDE+EFG_O+EFG_D+TOR+TORD+ORB+DRB+FTR+FTRD+X2P_O+X2P_D+X3P_O+X3P_D+ADJ_T, data=df2, subset=train_index)
+summary(lda.fit)
+lda.pred = predict(lda.fit,test)
+table(lda.pred$class,test$POSTSEASON)
+mean(lda.pred$class==test$POSTSEASON)
 ```
 
 
-# Q1 QDA - offense only
+# Q1 LDA - offense only
 ```{r}
-qda.fit = qda(POSTSEASON~ADJOE+EFG_O+TOR+ORB+FTR+X2P_O+X3P_O+ADJ_T, data=df2, subset=train_index)
-summary(qda.fit)
-qda.pred = predict(qda.fit,test)
-table(qda.pred$class,test$POSTSEASON)
-mean(qda.pred$class==test$POSTSEASON)
+lda.fit = lda(POSTSEASON~ADJOE+EFG_O+TOR+ORB+FTR+X2P_O+X3P_O+ADJ_T, data=df2, subset=train_index)
+summary(lda.fit)
+lda.pred = predict(lda.fit,test)
+table(lda.pred$class,test$POSTSEASON)
+mean(lda.pred$class==test$POSTSEASON)
 ```
 
 
-# Q1 QDA - defense only
+# Q1 LDA - defense only
 ```{r}
-qda.fit = qda(POSTSEASON~ADJDE+EFG_D+TORD+DRB+FTRD+X2P_D+X3P_D, data=df2, subset=train_index)
-summary(qda.fit)
-qda.pred = predict(qda.fit,test)
-table(qda.pred$class,test$POSTSEASON)
-mean(qda.pred$class==test$POSTSEASON)
+lda.fit = lda(POSTSEASON~ADJDE+EFG_D+TORD+DRB+FTRD+X2P_D+X3P_D, data=df2, subset=train_index)
+summary(lda.fit)
+lda.pred = predict(lda.fit,test)
+table(lda.pred$class,test$POSTSEASON)
+mean(lda.pred$class==test$POSTSEASON)
 ```
+
 
 
 # Q2 Subset Selection
