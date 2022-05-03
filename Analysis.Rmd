@@ -176,16 +176,36 @@ plot(performance(ROCRpred,'tpr','fpr'),colorize=TRUE,
      print.cutoffs.at=seq(0,1,by=0.05), text.adj=c(-0.2,1.7))
 ```
 
-# Q1 QDA
-```{r}
-qda.fit = qda(POSTSEASON~BARTHAG+ADJOE+ADJDE+TOR+FTR, data=df2, subset=train_index)
-summary(qda.fit)
 
+# Q1 QDA - offense + defense
+```{r}
+qda.fit = qda(POSTSEASON~ADJOE+ADJDE+EFG_O+EFG_D+TOR+TORD+ORB+DRB+FTR+FTRD+X2P_O+X2P_D+X3P_O+X3P_D+ADJ_T, data=df2, subset=train_index)
+summary(qda.fit)
 qda.pred = predict(qda.fit,test)
 table(qda.pred$class,test$POSTSEASON)
-
 mean(qda.pred$class==test$POSTSEASON)
 ```
+
+
+# Q1 QDA - offense only
+```{r}
+qda.fit = qda(POSTSEASON~ADJOE+EFG_O+TOR+ORB+FTR+X2P_O+X3P_O+ADJ_T, data=df2, subset=train_index)
+summary(qda.fit)
+qda.pred = predict(qda.fit,test)
+table(qda.pred$class,test$POSTSEASON)
+mean(qda.pred$class==test$POSTSEASON)
+```
+
+
+# Q1 QDA - defense only
+```{r}
+qda.fit = qda(POSTSEASON~ADJDE+EFG_D+TORD+DRB+FTRD+X2P_D+X3P_D, data=df2, subset=train_index)
+summary(qda.fit)
+qda.pred = predict(qda.fit,test)
+table(qda.pred$class,test$POSTSEASON)
+mean(qda.pred$class==test$POSTSEASON)
+```
+
 
 # Q2 Subset Selection
 ```{r}
