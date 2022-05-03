@@ -252,6 +252,14 @@ min(backward.bic)
 backward.bic
 ```
 
+## Q2 -- MLR
+
+```{r}
+mlr.model = lm(WinRate~ADJOE+ADJDE+TOR+TORD+ORB+DRB+FTR+X2P_O+X2P_D+X3P_O+X3P_D+ADJ_T,data=train)
+
+model.summary = summary(mlr.model)
+mean((test$WinRate - predict.lm(mlr.model, test)) ^ 2)
+```
 
 ```{r}
 library(glmnet)
