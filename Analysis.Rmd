@@ -263,18 +263,19 @@ mean((test$WinRate - predict.lm(mlr.model, test)) ^ 2)
 
 ```{r}
 library(glmnet)
-
-x = model.matrix(WinRate~.,data=df)[,-1] 
+x = model.matrix(WinRate~ADJOE+ADJDE+EFG_O+EFG_D+TOR+TORD+ORB+DRB+FTR+FTRD+X2P_O+X2P_D+X3P_O+X3P_D+ADJ_T,data=df)[,-1] 
 Y = train$WinRate
 grid = 10^seq(10,-2,length=100)
-cv.out.lasso = cv.glmnet(x[trainIdx,],Y,alpha = 1, lambda = grid) 
-plot(cv.out.lasso)
-bestlambda = cv.out.lasso$lambda.min
+cv.out.ridge = cv.glmnet(x[trainIdx,],Y,alpha = 0, lambda = grid) 
+plot(cv.out.ridge)
+bestlambda = cv.out.ridge$lambda.min
 bestlambda
-lasso.train = glmnet(x[trainIdx,],Y,alpha=1,lambda=grid)
-lasso.pred = predict(lasso.train,s=bestlambda,newx=x[-trainIdx,])
-mean((lasso.pred-Y[-trainIdx])^2)
+#really small lambda means a very flexible model.
+ridge.train = glmnet(x[trainIdx,],Y,alpha=0,lambda=grid)
+ridge.pred = predict(ridge.train,s=bestlambda,newx=x[-trainIdx,])
+mean((ridge.pred-Y[-trainIdx])^2)
+final.ridge = glmnet(x[trainIdx,],Y,alpha=0,lambda=bestlambda)
+coef(final.ridge)
 
-final.lasso = glmnet(x,Y,alpha=1,lambda=bestlambda)
-coef(final.lasso)
+plot(ridge.train,xvar="lambda",label=TRUE)
 ```
