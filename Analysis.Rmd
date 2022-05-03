@@ -53,6 +53,7 @@ train = df[trainIdx,]
 test = df[-trainIdx,]
 
 ```
+
 ```{r}
 head(df)
 
