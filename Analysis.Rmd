@@ -241,3 +241,22 @@ backward.aic
 min(backward.bic)
 backward.bic
 ```
+
+
+```{r}
+library(glmnet)
+
+x = model.matrix(WinRate~.,data=df)[,-1] 
+Y = train$WinRate
+grid = 10^seq(10,-2,length=100)
+cv.out.lasso = cv.glmnet(x[trainIdx,],Y,alpha = 1, lambda = grid) 
+plot(cv.out.lasso)
+bestlambda = cv.out.lasso$lambda.min
+bestlambda
+lasso.train = glmnet(x[trainIdx,],Y,alpha=1,lambda=grid)
+lasso.pred = predict(lasso.train,s=bestlambda,newx=x[-trainIdx,])
+mean((lasso.pred-Y[-trainIdx])^2)
+
+final.lasso = glmnet(x,Y,alpha=1,lambda=bestlambda)
+coef(final.lasso)
+```
