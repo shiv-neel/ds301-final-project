@@ -54,28 +54,30 @@ test = df[-trainIdx,]
 
 ```
 
+
 ```{r}
 head(df)
-
-hist(df$G)
-hist(df$W)
-hist(df$ADJOE)
-hist(df$ADJDE)
-hist(df$BARTHAG)
-hist(df$EFG_O)
-hist(df$EFG_D)
-hist(df$TOR)
-hist(df$TORD)
-hist(df$ORB)
-hist(df$DRB)
-hist(df$FTR)
-hist(df$FTRD)
-hist(df$X2P_O)
-hist(df$X2P_D)
-hist(df$X3P_O)
-hist(df$X3P_D)
-hist(df$ADJ_T)
-hist(df$WAB)
+hist(df$G, main="Number of games played")
+hist(df$W, main="Number of games won")
+hist(df$ADJOE, main="Adjusted Offensive Efficiency ")
+hist(df$ADJDE, main="Adjusted Defensive Efficiency")
+hist(df$BARTHAG, main="Power Rating")
+hist(df$EFG_O, main="Effective Field Goal Percentage Shot")
+hist(df$EFG_D, main="Effective Field Goal Percentage Allowed")
+hist(df$TOR, main="Turnover Percentage Allowed (Turnover Rate)")
+hist(df$TORD, main="Turnover Percentage Committed (Steal Rate)")
+hist(df$ORB, main="Offensive Rebound Rate")
+hist(df$DRB, main="Offensive Rebound Rate Allowed")
+hist(df$FTR, main="Free Throw Rate")
+hist(df$FTRD, main="Free Throw Rate Allowed")
+hist(df$X2P_O, main="Two-Point Shooting Percentage")
+hist(df$X2P_D, main="Two-Point Shooting Percentage Allowed")
+hist(df$X3P_O, main="Three-Point Shooting Percentage")
+hist(df$X3P_D, main="Three-Point Shooting Percentage Allowed")
+hist(df$ADJ_T, main="Adjusted Tempo")
+hist(df$WAB, main="Wins Above Bubble")
+hist(df$SEED, main="Tournament Seed")
+hist(df$WinRate, main="Win Rate")
 ```
 
 # Q1 SETUP
