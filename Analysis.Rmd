@@ -95,36 +95,31 @@ test = df2[-train_index,]
 
 #Q1 logistic regression assumption test
 ```{r}
-cor(df2[,c('ADJOE', 'EFG_O',  'TOR',  'ORB', 
+cor(df2[,c('ADJOE', #'EFG_O',
+            'TOR',  'ORB', 
             'FTR', 'X2P_O', 'X3P_O', 'ADJ_T')])
 
 
-cor(df2[,c('ADJDE','EFG_D','TORD','DRB', 'FTRD','X2P_D','X3P_D')])
+cor(df2[,c('ADJDE','TORD','DRB', 'FTRD','X2P_D','X3P_D')])
+#'EFG_D',
 ```
-
 
 
 # Q1 logistic regression - offense + defense
 ```{r}
 library(MASS)
-glm.fit = glm(POSTSEASON~ADJOE+ADJDE+EFG_O+EFG_D+TOR+TORD+ORB+DRB+FTR+FTRD+X2P_O+X2P_D+X3P_O+X3P_D+ADJ_T, data=df2, subset=train_index, family='binomial')
+glm.fit = glm(POSTSEASON~ADJOE+ADJDE+TOR+TORD+ORB+DRB+FTR+FTRD+X2P_O+X2P_D+X3P_O+X3P_D+ADJ_T, data=df2, subset=train_index, family='binomial')
 summary(glm.fit)
-
 glm.prob = predict(glm.fit, test,type='response') 
 glm.pred = rep(0,nrow(test))
 glm.pred[glm.prob >0.5] = 1
 table(glm.pred,test$POSTSEASON)
-
 1-mean(glm.pred == test$POSTSEASON)
-
 cMatrix=table(glm.pred,test$POSTSEASON)
-
 falsenegRate = cMatrix[1,2] / nrow(test)
 falsenegRate
-
 falseposRate = cMatrix[2,1] / nrow(test)
 falseposRate
-
 ROCRpred <- prediction(glm.prob,test$POSTSEASON)
 plot(performance(ROCRpred,'tpr','fpr'))
 plot(performance(ROCRpred,'tpr','fpr'),colorize=TRUE,
@@ -134,25 +129,18 @@ plot(performance(ROCRpred,'tpr','fpr'),colorize=TRUE,
 # Q1 logistic regression - offense only
 ```{r}
 #ADJOE+ADJDE+EFG_O+EFG_D+TOR+TORD+ORB+DRB+FTR+FTRD+X2P_O+X2P_D+X3P_O+X3P_D+ADJ_T
-glm.fit = glm(POSTSEASON~ADJOE+EFG_O+TOR+ORB+FTR+X2P_O+X3P_O+ADJ_T, data=df2, subset=train_index, family='binomial')
+glm.fit = glm(POSTSEASON~ADJOE+TOR+ORB+FTR+X2P_O+X3P_O+ADJ_T, data=df2, subset=train_index, family='binomial')
 summary(glm.fit)
-
 glm.prob = predict(glm.fit, test,type='response') 
 glm.pred = rep(0,nrow(test))
-
 glm.pred[glm.prob >0.5] = 1
 table(glm.pred,test$POSTSEASON) #rows are predicted, # columns are true 
-
 1-mean(glm.pred == test$POSTSEASON)
-
 cMatrix=table(glm.pred,test$POSTSEASON)
-
 falsenegRate = cMatrix[1,2] / nrow(test)
 falsenegRate
-
 falseposRate = cMatrix[2,1] / nrow(test)
 falseposRate
-
 ROCRpred <- prediction(glm.prob,test$POSTSEASON)
 plot(performance(ROCRpred,'tpr','fpr'))
 plot(performance(ROCRpred,'tpr','fpr'),colorize=TRUE,
@@ -162,31 +150,23 @@ plot(performance(ROCRpred,'tpr','fpr'),colorize=TRUE,
 # Q1 logistic regression - defense only
 ```{r}
 #ADJOE+ADJDE+EFG_O+EFG_D+TOR+TORD+ORB+DRB+FTR+FTRD+X2P_O+X2P_D+X3P_O+X3P_D+ADJ_T
-glm.fit = glm(POSTSEASON~ADJDE+EFG_D+TORD+DRB+FTRD+X2P_D+X3P_D, data=df2, subset=train_index, family='binomial')
+glm.fit = glm(POSTSEASON~ADJDE+TORD+DRB+FTRD+X2P_D+X3P_D, data=df2, subset=train_index, family='binomial')
 summary(glm.fit)
-
 glm.prob = predict(glm.fit, test,type='response') 
 glm.pred = rep(0,nrow(test))
-
 glm.pred[glm.prob >0.5] = 1
 table(glm.pred,test$POSTSEASON)
-
 1-mean(glm.pred == test$POSTSEASON)
-
 cMatrix=table(glm.pred,test$POSTSEASON)
-
 falsenegRate = cMatrix[1,2] / nrow(test)
 falsenegRate
-
 falseposRate = cMatrix[2,1] / nrow(test)
 falseposRate
-
 ROCRpred <- prediction(glm.prob,test$POSTSEASON)
 plot(performance(ROCRpred,'tpr','fpr'))
 plot(performance(ROCRpred,'tpr','fpr'),colorize=TRUE,
      print.cutoffs.at=seq(0,1,by=0.05), text.adj=c(-0.2,1.7))
 ```
-
 
 # Q1 - Testing for LDA Assumptions
 ```{r}
