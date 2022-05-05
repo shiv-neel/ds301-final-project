@@ -93,6 +93,15 @@ train = df2[train_index,]
 test = df2[-train_index,]
 ```
 
+#Q1 logistic regression assumption test
+```{r}
+cor(df2[,c('ADJOE', 'EFG_O',  'TOR',  'ORB', 
+            'FTR', 'X2P_O', 'X3P_O', 'ADJ_T')])
+
+
+cor(df2[,c('ADJDE','EFG_D','TORD','DRB', 'FTRD','X2P_D','X3P_D')])
+```
+
 
 
 # Q1 logistic regression - offense + defense
@@ -187,6 +196,8 @@ CovMatrix <- cbind(df2$ADJOE, df2$ADJDE, df2$EFG_O, df2$EFG_D, df2$TOR, df2$TORD
                    df2$X2P_O, df2$X2P_D, df2$X3P_O, df2$X3P_D, df2$ADJ_T)
 cov(CovMatrix)
 ```
+
+
 
 # Q1 LDA - offense + defense
 ```{r}
