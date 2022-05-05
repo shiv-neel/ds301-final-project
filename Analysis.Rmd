@@ -275,6 +275,47 @@ mean((test$WinRate - predict.lm(mlr.model, test)) ^ 2)
 ```
 
 ```{r}
+library(caret)
+library(class)
+
+df3 = df
+head(df3)
+standardized.X2 = scale(df3[,-26])  # -26 if full df, if you make it train then -19
+
+flds <- createFolds(df3$WinRate, k = 5, list = TRUE, returnTrain = FALSE)
+names(flds)
+
+K= c(1,3,5) # nearest neighbor values
+
+cv_error = matrix(NA, 5, 3)
+
+for(j in 1:3){
+  k = K[j]
+  for(i in 1:5){
+    test_index = flds[[i]]
+    testX = standardized.X2[test_index,]
+    trainX = standardized.X2[-test_index,]
+    
+    trainY = df3$WinRate[-test_index]
+    testY = df3$WinRate[test_index]
+    
+    knn.pred = knn(trainX,testX,trainY,k=k)
+    cv_error[i,j] = mean(testY!=knn.pred)
+  }
+}
+
+train.X = standardized.X2[train_index,]
+test.X = standardized.X2[test_index,]
+train.Y = df3$WinRate[train_index]
+test.Y = df3$WinRate[test_index]
+
+apply(cv_error,2,mean)
+
+knn.pred = knn(train.X,test.X,train.Y,k=5)
+mean(test.Y!=knn.pred)
+```
+
+```{r}
 library(glmnet)
 x = model.matrix(WinRate~ADJOE+ADJDE+EFG_O+EFG_D+TOR+TORD+ORB+DRB+FTR+FTRD+X2P_O+X2P_D+X3P_O+X3P_D+ADJ_T,data=df)[,-1] 
 Y = train$WinRate
