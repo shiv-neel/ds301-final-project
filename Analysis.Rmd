@@ -93,24 +93,22 @@ train = df2[train_index,]
 test = df2[-train_index,]
 ```
 
+
 #Q1 logistic regression assumption test
 ```{r}
-cor(df2[,c('ADJOE', #'EFG_O',
+cor(df2[,c('ADJOE', 'EFG_O',
             'TOR',  'ORB', 
             'FTR', 'X2P_O', 'X3P_O', 'ADJ_T')])
-
-
-cor(df2[,c('ADJDE','TORD','DRB', 'FTRD','X2P_D','X3P_D')])
+cor(df2[,c('ADJDE','TORD','DRB', 'FTRD','X2P_D', 'EFG_D','X3P_D')])
 #'EFG_D',
 ```
-
 
 # Q1 logistic regression - offense + defense
 ```{r}
 library(MASS)
 glm.fit = glm(POSTSEASON~ADJOE+ADJDE+TOR+TORD+ORB+DRB+FTR+FTRD+X2P_O+X2P_D+X3P_O+X3P_D+ADJ_T, data=df2, subset=train_index, family='binomial')
 summary(glm.fit)
-glm.prob = predict(glm.fit, test,type='response') 
+glm.prob = predict(glm.fit, test,type='response')
 glm.pred = rep(0,nrow(test))
 glm.pred[glm.prob >0.5] = 1
 table(glm.pred,test$POSTSEASON)
@@ -150,7 +148,7 @@ plot(performance(ROCRpred,'tpr','fpr'),colorize=TRUE,
 # Q1 logistic regression - defense only
 ```{r}
 #ADJOE+ADJDE+EFG_O+EFG_D+TOR+TORD+ORB+DRB+FTR+FTRD+X2P_O+X2P_D+X3P_O+X3P_D+ADJ_T
-glm.fit = glm(POSTSEASON~ADJDE+TORD+DRB+FTRD+X2P_D+X3P_D, data=df2, subset=train_index, family='binomial')
+glm.fit = glm(POSTSEASON~ADJDE+TORD+DRB+FTRD+X3P_D, data=df2, subset=train_index, family='binomial')
 summary(glm.fit)
 glm.prob = predict(glm.fit, test,type='response') 
 glm.pred = rep(0,nrow(test))
@@ -168,16 +166,17 @@ plot(performance(ROCRpred,'tpr','fpr'),colorize=TRUE,
      print.cutoffs.at=seq(0,1,by=0.05), text.adj=c(-0.2,1.7))
 ```
 
+
 # Q1 - Testing for LDA Assumptions
 ```{r}
 #ADJOE+ADJDE+EFG_O+EFG_D+TOR+TORD+ORB+DRB+FTR+FTRD+X2P_O+X2P_D+X3P_O+X3P_D+ADJ_T
-
-CovMatrix <- cbind(df2$ADJOE, df2$ADJDE, df2$EFG_O, df2$EFG_D, df2$TOR, df2$TORD, df2$ORB, df2$DRB, df2$FTR, df2$FTRD,
+CovOff <- cbind(df2$ADJOE, df2$ADJDE, df2$EFG_O, df2$EFG_D, df2$TOR, df2$TORD, df2$ORB, df2$DRB, df2$FTR, df2$FTRD,
                    df2$X2P_O, df2$X2P_D, df2$X3P_O, df2$X3P_D, df2$ADJ_T)
-cov(CovMatrix)
+
+
+cov(CovOff)
+
 ```
-
-
 
 # Q1 LDA - offense + defense
 ```{r}
@@ -198,6 +197,34 @@ table(lda.pred$class,test$POSTSEASON)
 mean(lda.pred$class==test$POSTSEASON)
 ```
 
+# Q1 LDA - offense only - multiple train/test splits
+```{r}
+
+ldaAccuracy = c()
+qdaAccuracy = c()
+
+
+for(i in 1:10){
+  train_index = sample(1:nrow(df2),nrow(df2)/4, replace=FALSE)
+  test_index = -train_index
+  train = df2[train_index,]
+  test = df2[-train_index,]
+  lda.fit = lda(POSTSEASON~ADJOE+EFG_O+TOR+ORB+FTR+X2P_O+X3P_O+ADJ_T, data=df2, subset=train_index)
+  lda.pred = predict(lda.fit,test)
+  ldaAccuracy[i] = mean(lda.pred$class==test$POSTSEASON)
+  
+  qda.fit = qda(POSTSEASON~ADJOE+EFG_O+TOR+ORB+FTR+X2P_O+X3P_O+ADJ_T, data=df2, subset=train_index)
+  qda.pred = predict(qda.fit,test)
+  qdaAccuracy[i] = mean(qda.pred$class==test$POSTSEASON)  
+}
+ldaAccuracy
+qdaAccuracy
+
+# qda always 0.5-2% worse than lda
+
+```
+
+
 
 # Q1 LDA - defense only
 ```{r}
@@ -208,6 +235,31 @@ table(lda.pred$class,test$POSTSEASON)
 mean(lda.pred$class==test$POSTSEASON)
 ```
 
+# Q1 LDA - defense only-  multiple train/test splits
+```{r}
+
+ldaAccuracy = c()
+qdaAccuracy = c()
+
+
+for(i in 1:10){
+  train_index = sample(1:nrow(df2),nrow(df2)/4, replace=FALSE)
+  test_index = -train_index
+  train = df2[train_index,]
+  test = df2[-train_index,]
+  lda.fit = lda(POSTSEASON~ADJDE+EFG_D+TORD+DRB+FTRD+X2P_D+X3P_D, data=df2, subset=train_index)
+  lda.pred = predict(lda.fit,test)
+  ldaAccuracy[i] = mean(lda.pred$class==test$POSTSEASON)
+  
+  qda.fit = qda(POSTSEASON~ADJDE+EFG_D+TORD+DRB+FTRD+X2P_D+X3P_D, data=df2, subset=train_index)
+  qda.pred = predict(qda.fit,test)
+  qdaAccuracy[i] = mean(qda.pred$class==test$POSTSEASON)  
+}
+ldaAccuracy
+qdaAccuracy
+
+# qda always 1-2% worse than lda
+```
 
 
 # Q2 Subset Selection
