@@ -1,0 +1,29 @@
+AllYears accuracies: 
+- Logistic (offense) = 88%
+- Logistic (defense) = 86%
+- LDA (offense) = 87%
+- LDA (defense) = 85%
+
+2013 accuracies (% lower than corresponding AllYears Accuracy): 
+- Logistic (offense) = 83% (-5%)
+- Logistic (defense) = 83% (-3%)
+- LDA (offense) = 79% (-9%)
+- LDA (defense) = 84% (-1%)
+
+2015 accuracies (% lower than corresponding AllYears Accuracy): 
+- Logistic (offense) = 87% (-1%)
+- Logistic (defense) = 81% (-5%)
+- LDA (offense) = 85% (-2%)
+- LDA (defense) = 81% (-4%)
+
+2017 accuracies (% lower than corresponding AllYears Accuracy): 
+- Logistic (offense) = 84% (-4%)
+- Logistic (defense) = 80% (-6%)
+- LDA (offense) = 88% (+1%)
+- LDA (defense) = 81% (-4%)
+
+2019 accuracies (% lower than corresponding AllYears Accuracy): 
+- Logistic (offense) = 87% (-1%)
+- Logistic (defense) = 84% (-2%)
+- LDA (offense) = 86% (-1%)
+- LDA (defense) = 86% (+1%)
