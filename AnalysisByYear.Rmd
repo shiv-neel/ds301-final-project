@@ -1,0 +1,473 @@
+---
+title: "CBB_Analysis"
+author: "Shiva Neelakantan, Ryan Scehovic, Ryan McNally, Saketh Jonnadula"
+date: '2022-05-01'
+output: html_document
+---
+
+
+## Year 2013 - Logistic Regression and LDA 
+```{r}
+df = read.csv('./cbb13.csv')
+df[is.na(df)] <- -1
+sum(is.na(df))
+df$teamYear = paste(df$TEAM, df$YEAR)
+
+library(leaps)
+library(ggplot2)
+library(VIM)
+library(cluster)
+library(dplyr)
+library(ROCR)
+library(MASS)
+
+df = df %>% mutate(WinRate = W/G)
+for (i in 1:length(df$POSTSEASON)) {
+  if (df$POSTSEASON[i] == 'Champions')
+    df$POSTSEASON[i] = 1
+  else if (df$POSTSEASON[i] == '2ND')
+    df$POSTSEASON[i] = 1
+  else if (df$POSTSEASON[i] == 'F4')
+    df$POSTSEASON[i] = 1
+  else if (df$POSTSEASON[i] == 'E8')
+    df$POSTSEASON[i] = 1
+  else if (df$POSTSEASON[i] == 'S16')
+    df$POSTSEASON[i] = 1
+  else if (df$POSTSEASON[i] == 'R32')
+    df$POSTSEASON[i] = 1
+  else if (df$POSTSEASON[i] == 'R64')
+    df$POSTSEASON[i] = 1
+  else df$POSTSEASON[i] = 0
+}
+df$SEED[is.na(df$SEED)] = 0
+```
+
+
+
+# Q1 SETUP
+```{r}
+set.seed(7)
+df2 <- df[5:22]
+df2$WinRate=df$WinRate
+df2$POSTSEASON=as.numeric(df2$POSTSEASON)
+df2$SEED=df$SEED
+train_index = sample(1:nrow(df2),nrow(df2)/4, replace=FALSE)
+test_index = -train_index
+train = df2[train_index,]
+test = df2[-train_index,]
+```
+
+
+# Q1 logistic regression - offense only
+```{r}
+#ADJOE+ADJDE+EFG_O+EFG_D+TOR+TORD+ORB+DRB+FTR+FTRD+X2P_O+X2P_D+X3P_O+X3P_D+ADJ_T
+glm.fit = glm(POSTSEASON~ADJOE+TOR+ORB+FTR+X2P_O+X3P_O+ADJ_T, data=df2, subset=train_index, family='binomial')
+summary(glm.fit)
+glm.prob = predict(glm.fit, test,type='response') 
+glm.pred = rep(0,nrow(test))
+glm.pred[glm.prob >0.5] = 1
+table(glm.pred,test$POSTSEASON) #rows are predicted, # columns are true 
+1-mean(glm.pred == test$POSTSEASON)
+cMatrix=table(glm.pred,test$POSTSEASON)
+falsenegRate = cMatrix[1,2] / nrow(test)
+falsenegRate
+falseposRate = cMatrix[2,1] / nrow(test)
+falseposRate
+ROCRpred <- prediction(glm.prob,test$POSTSEASON)
+plot(performance(ROCRpred,'tpr','fpr'))
+plot(performance(ROCRpred,'tpr','fpr'),colorize=TRUE,
+     print.cutoffs.at=seq(0,1,by=0.05), text.adj=c(-0.2,1.7))
+```
+
+# Q1 logistic regression - defense only
+```{r}
+#ADJOE+ADJDE+EFG_O+EFG_D+TOR+TORD+ORB+DRB+FTR+FTRD+X2P_O+X2P_D+X3P_O+X3P_D+ADJ_T
+glm.fit = glm(POSTSEASON~ADJDE+TORD+DRB+FTRD+X3P_D, data=df2, subset=train_index, family='binomial')
+summary(glm.fit)
+glm.prob = predict(glm.fit, test,type='response') 
+glm.pred = rep(0,nrow(test))
+glm.pred[glm.prob >0.5] = 1
+table(glm.pred,test$POSTSEASON)
+1-mean(glm.pred == test$POSTSEASON)
+cMatrix=table(glm.pred,test$POSTSEASON)
+falsenegRate = cMatrix[1,2] / nrow(test)
+falsenegRate
+falseposRate = cMatrix[2,1] / nrow(test)
+falseposRate
+ROCRpred <- prediction(glm.prob,test$POSTSEASON)
+plot(performance(ROCRpred,'tpr','fpr'))
+plot(performance(ROCRpred,'tpr','fpr'),colorize=TRUE,
+     print.cutoffs.at=seq(0,1,by=0.05), text.adj=c(-0.2,1.7))
+```
+
+
+# Q1 LDA - offense only
+```{r}
+lda.fit = lda(POSTSEASON~ADJOE+EFG_O+TOR+ORB+FTR+X2P_O+X3P_O+ADJ_T, data=df2, subset=train_index)
+summary(lda.fit)
+lda.pred = predict(lda.fit,test)
+table(lda.pred$class,test$POSTSEASON)
+mean(lda.pred$class==test$POSTSEASON)
+```
+
+
+# Q1 LDA - defense only
+```{r}
+lda.fit = lda(POSTSEASON~ADJDE+EFG_D+TORD+DRB+FTRD+X2P_D+X3P_D, data=df2, subset=train_index)
+summary(lda.fit)
+lda.pred = predict(lda.fit,test)
+table(lda.pred$class,test$POSTSEASON)
+mean(lda.pred$class==test$POSTSEASON)
+```
+
+
+
+## Year 2015 - Logistic Regression and LDA 
+```{r}
+df = read.csv('./cbb15.csv')
+df[is.na(df)] <- -1
+sum(is.na(df))
+df$teamYear = paste(df$TEAM, df$YEAR)
+
+library(leaps)
+library(ggplot2)
+library(VIM)
+library(cluster)
+library(dplyr)
+library(ROCR)
+library(MASS)
+
+df = df %>% mutate(WinRate = W/G)
+for (i in 1:length(df$POSTSEASON)) {
+  if (df$POSTSEASON[i] == 'Champions')
+    df$POSTSEASON[i] = 1
+  else if (df$POSTSEASON[i] == '2ND')
+    df$POSTSEASON[i] = 1
+  else if (df$POSTSEASON[i] == 'F4')
+    df$POSTSEASON[i] = 1
+  else if (df$POSTSEASON[i] == 'E8')
+    df$POSTSEASON[i] = 1
+  else if (df$POSTSEASON[i] == 'S16')
+    df$POSTSEASON[i] = 1
+  else if (df$POSTSEASON[i] == 'R32')
+    df$POSTSEASON[i] = 1
+  else if (df$POSTSEASON[i] == 'R64')
+    df$POSTSEASON[i] = 1
+  else df$POSTSEASON[i] = 0
+}
+df$SEED[is.na(df$SEED)] = 0
+```
+
+
+
+# Q1 SETUP
+```{r}
+set.seed(7)
+df2 <- df[5:22]
+df2$WinRate=df$WinRate
+df2$POSTSEASON=as.numeric(df2$POSTSEASON)
+df2$SEED=df$SEED
+train_index = sample(1:nrow(df2),nrow(df2)/4, replace=FALSE)
+test_index = -train_index
+train = df2[train_index,]
+test = df2[-train_index,]
+```
+
+
+# Q1 logistic regression - offense only
+```{r}
+#ADJOE+ADJDE+EFG_O+EFG_D+TOR+TORD+ORB+DRB+FTR+FTRD+X2P_O+X2P_D+X3P_O+X3P_D+ADJ_T
+glm.fit = glm(POSTSEASON~ADJOE+TOR+ORB+FTR+X2P_O+X3P_O+ADJ_T, data=df2, subset=train_index, family='binomial')
+summary(glm.fit)
+glm.prob = predict(glm.fit, test,type='response') 
+glm.pred = rep(0,nrow(test))
+glm.pred[glm.prob >0.5] = 1
+table(glm.pred,test$POSTSEASON) #rows are predicted, # columns are true 
+1-mean(glm.pred == test$POSTSEASON)
+cMatrix=table(glm.pred,test$POSTSEASON)
+falsenegRate = cMatrix[1,2] / nrow(test)
+falsenegRate
+falseposRate = cMatrix[2,1] / nrow(test)
+falseposRate
+ROCRpred <- prediction(glm.prob,test$POSTSEASON)
+plot(performance(ROCRpred,'tpr','fpr'))
+plot(performance(ROCRpred,'tpr','fpr'),colorize=TRUE,
+     print.cutoffs.at=seq(0,1,by=0.05), text.adj=c(-0.2,1.7))
+```
+
+# Q1 logistic regression - defense only
+```{r}
+#ADJOE+ADJDE+EFG_O+EFG_D+TOR+TORD+ORB+DRB+FTR+FTRD+X2P_O+X2P_D+X3P_O+X3P_D+ADJ_T
+glm.fit = glm(POSTSEASON~ADJDE+TORD+DRB+FTRD+X3P_D, data=df2, subset=train_index, family='binomial')
+summary(glm.fit)
+glm.prob = predict(glm.fit, test,type='response') 
+glm.pred = rep(0,nrow(test))
+glm.pred[glm.prob >0.5] = 1
+table(glm.pred,test$POSTSEASON)
+1-mean(glm.pred == test$POSTSEASON)
+cMatrix=table(glm.pred,test$POSTSEASON)
+falsenegRate = cMatrix[1,2] / nrow(test)
+falsenegRate
+falseposRate = cMatrix[2,1] / nrow(test)
+falseposRate
+ROCRpred <- prediction(glm.prob,test$POSTSEASON)
+plot(performance(ROCRpred,'tpr','fpr'))
+plot(performance(ROCRpred,'tpr','fpr'),colorize=TRUE,
+     print.cutoffs.at=seq(0,1,by=0.05), text.adj=c(-0.2,1.7))
+```
+
+
+# Q1 LDA - offense only
+```{r}
+lda.fit = lda(POSTSEASON~ADJOE+EFG_O+TOR+ORB+FTR+X2P_O+X3P_O+ADJ_T, data=df2, subset=train_index)
+summary(lda.fit)
+lda.pred = predict(lda.fit,test)
+table(lda.pred$class,test$POSTSEASON)
+mean(lda.pred$class==test$POSTSEASON)
+```
+
+
+# Q1 LDA - defense only
+```{r}
+lda.fit = lda(POSTSEASON~ADJDE+EFG_D+TORD+DRB+FTRD+X2P_D+X3P_D, data=df2, subset=train_index)
+summary(lda.fit)
+lda.pred = predict(lda.fit,test)
+table(lda.pred$class,test$POSTSEASON)
+mean(lda.pred$class==test$POSTSEASON)
+```
+
+
+## Year 2017 - Logistic Regression and LDA 
+```{r}
+df = read.csv('./cbb17.csv')
+df[is.na(df)] <- -1
+sum(is.na(df))
+df$teamYear = paste(df$TEAM, df$YEAR)
+
+library(leaps)
+library(ggplot2)
+library(VIM)
+library(cluster)
+library(dplyr)
+library(ROCR)
+library(MASS)
+
+df = df %>% mutate(WinRate = W/G)
+for (i in 1:length(df$POSTSEASON)) {
+  if (df$POSTSEASON[i] == 'Champions')
+    df$POSTSEASON[i] = 1
+  else if (df$POSTSEASON[i] == '2ND')
+    df$POSTSEASON[i] = 1
+  else if (df$POSTSEASON[i] == 'F4')
+    df$POSTSEASON[i] = 1
+  else if (df$POSTSEASON[i] == 'E8')
+    df$POSTSEASON[i] = 1
+  else if (df$POSTSEASON[i] == 'S16')
+    df$POSTSEASON[i] = 1
+  else if (df$POSTSEASON[i] == 'R32')
+    df$POSTSEASON[i] = 1
+  else if (df$POSTSEASON[i] == 'R64')
+    df$POSTSEASON[i] = 1
+  else df$POSTSEASON[i] = 0
+}
+df$SEED[is.na(df$SEED)] = 0
+```
+
+
+
+# Q1 SETUP
+```{r}
+set.seed(7)
+df2 <- df[5:22]
+df2$WinRate=df$WinRate
+df2$POSTSEASON=as.numeric(df2$POSTSEASON)
+df2$SEED=df$SEED
+train_index = sample(1:nrow(df2),nrow(df2)/4, replace=FALSE)
+test_index = -train_index
+train = df2[train_index,]
+test = df2[-train_index,]
+```
+
+
+# Q1 logistic regression - offense only
+```{r}
+#ADJOE+ADJDE+EFG_O+EFG_D+TOR+TORD+ORB+DRB+FTR+FTRD+X2P_O+X2P_D+X3P_O+X3P_D+ADJ_T
+glm.fit = glm(POSTSEASON~ADJOE+TOR+ORB+FTR+X2P_O+X3P_O+ADJ_T, data=df2, subset=train_index, family='binomial')
+summary(glm.fit)
+glm.prob = predict(glm.fit, test,type='response') 
+glm.pred = rep(0,nrow(test))
+glm.pred[glm.prob >0.5] = 1
+table(glm.pred,test$POSTSEASON) #rows are predicted, # columns are true 
+1-mean(glm.pred == test$POSTSEASON)
+cMatrix=table(glm.pred,test$POSTSEASON)
+falsenegRate = cMatrix[1,2] / nrow(test)
+falsenegRate
+falseposRate = cMatrix[2,1] / nrow(test)
+falseposRate
+ROCRpred <- prediction(glm.prob,test$POSTSEASON)
+plot(performance(ROCRpred,'tpr','fpr'))
+plot(performance(ROCRpred,'tpr','fpr'),colorize=TRUE,
+     print.cutoffs.at=seq(0,1,by=0.05), text.adj=c(-0.2,1.7))
+```
+
+# Q1 logistic regression - defense only
+```{r}
+#ADJOE+ADJDE+EFG_O+EFG_D+TOR+TORD+ORB+DRB+FTR+FTRD+X2P_O+X2P_D+X3P_O+X3P_D+ADJ_T
+glm.fit = glm(POSTSEASON~ADJDE+TORD+DRB+FTRD+X3P_D, data=df2, subset=train_index, family='binomial')
+summary(glm.fit)
+glm.prob = predict(glm.fit, test,type='response') 
+glm.pred = rep(0,nrow(test))
+glm.pred[glm.prob >0.5] = 1
+table(glm.pred,test$POSTSEASON)
+1-mean(glm.pred == test$POSTSEASON)
+cMatrix=table(glm.pred,test$POSTSEASON)
+falsenegRate = cMatrix[1,2] / nrow(test)
+falsenegRate
+falseposRate = cMatrix[2,1] / nrow(test)
+falseposRate
+ROCRpred <- prediction(glm.prob,test$POSTSEASON)
+plot(performance(ROCRpred,'tpr','fpr'))
+plot(performance(ROCRpred,'tpr','fpr'),colorize=TRUE,
+     print.cutoffs.at=seq(0,1,by=0.05), text.adj=c(-0.2,1.7))
+```
+
+
+# Q1 LDA - offense only
+```{r}
+lda.fit = lda(POSTSEASON~ADJOE+EFG_O+TOR+ORB+FTR+X2P_O+X3P_O+ADJ_T, data=df2, subset=train_index)
+summary(lda.fit)
+lda.pred = predict(lda.fit,test)
+table(lda.pred$class,test$POSTSEASON)
+mean(lda.pred$class==test$POSTSEASON)
+```
+
+
+# Q1 LDA - defense only
+```{r}
+lda.fit = lda(POSTSEASON~ADJDE+EFG_D+TORD+DRB+FTRD+X2P_D+X3P_D, data=df2, subset=train_index)
+summary(lda.fit)
+lda.pred = predict(lda.fit,test)
+table(lda.pred$class,test$POSTSEASON)
+mean(lda.pred$class==test$POSTSEASON)
+```
+
+
+
+
+
+## Year 2019 - Logistic Regression and LDA 
+```{r}
+df = read.csv('./cbb19.csv')
+df[is.na(df)] <- -1
+sum(is.na(df))
+df$teamYear = paste(df$TEAM, df$YEAR)
+
+library(leaps)
+library(ggplot2)
+library(VIM)
+library(cluster)
+library(dplyr)
+library(ROCR)
+library(MASS)
+
+df = df %>% mutate(WinRate = W/G)
+for (i in 1:length(df$POSTSEASON)) {
+  if (df$POSTSEASON[i] == 'Champions')
+    df$POSTSEASON[i] = 1
+  else if (df$POSTSEASON[i] == '2ND')
+    df$POSTSEASON[i] = 1
+  else if (df$POSTSEASON[i] == 'F4')
+    df$POSTSEASON[i] = 1
+  else if (df$POSTSEASON[i] == 'E8')
+    df$POSTSEASON[i] = 1
+  else if (df$POSTSEASON[i] == 'S16')
+    df$POSTSEASON[i] = 1
+  else if (df$POSTSEASON[i] == 'R32')
+    df$POSTSEASON[i] = 1
+  else if (df$POSTSEASON[i] == 'R64')
+    df$POSTSEASON[i] = 1
+  else df$POSTSEASON[i] = 0
+}
+df$SEED[is.na(df$SEED)] = 0
+```
+
+
+
+# Q1 SETUP
+```{r}
+set.seed(7)
+df2 <- df[5:22]
+df2$WinRate=df$WinRate
+df2$POSTSEASON=as.numeric(df2$POSTSEASON)
+df2$SEED=df$SEED
+train_index = sample(1:nrow(df2),nrow(df2)/4, replace=FALSE)
+test_index = -train_index
+train = df2[train_index,]
+test = df2[-train_index,]
+```
+
+
+# Q1 logistic regression - offense only
+```{r}
+#ADJOE+ADJDE+EFG_O+EFG_D+TOR+TORD+ORB+DRB+FTR+FTRD+X2P_O+X2P_D+X3P_O+X3P_D+ADJ_T
+glm.fit = glm(POSTSEASON~ADJOE+TOR+ORB+FTR+X2P_O+X3P_O+ADJ_T, data=df2, subset=train_index, family='binomial')
+summary(glm.fit)
+glm.prob = predict(glm.fit, test,type='response') 
+glm.pred = rep(0,nrow(test))
+glm.pred[glm.prob >0.5] = 1
+table(glm.pred,test$POSTSEASON) #rows are predicted, # columns are true 
+1-mean(glm.pred == test$POSTSEASON)
+cMatrix=table(glm.pred,test$POSTSEASON)
+falsenegRate = cMatrix[1,2] / nrow(test)
+falsenegRate
+falseposRate = cMatrix[2,1] / nrow(test)
+falseposRate
+ROCRpred <- prediction(glm.prob,test$POSTSEASON)
+plot(performance(ROCRpred,'tpr','fpr'))
+plot(performance(ROCRpred,'tpr','fpr'),colorize=TRUE,
+     print.cutoffs.at=seq(0,1,by=0.05), text.adj=c(-0.2,1.7))
+```
+
+# Q1 logistic regression - defense only
+```{r}
+#ADJOE+ADJDE+EFG_O+EFG_D+TOR+TORD+ORB+DRB+FTR+FTRD+X2P_O+X2P_D+X3P_O+X3P_D+ADJ_T
+glm.fit = glm(POSTSEASON~ADJDE+TORD+DRB+FTRD+X3P_D, data=df2, subset=train_index, family='binomial')
+summary(glm.fit)
+glm.prob = predict(glm.fit, test,type='response') 
+glm.pred = rep(0,nrow(test))
+glm.pred[glm.prob >0.5] = 1
+table(glm.pred,test$POSTSEASON)
+1-mean(glm.pred == test$POSTSEASON)
+cMatrix=table(glm.pred,test$POSTSEASON)
+falsenegRate = cMatrix[1,2] / nrow(test)
+falsenegRate
+falseposRate = cMatrix[2,1] / nrow(test)
+falseposRate
+ROCRpred <- prediction(glm.prob,test$POSTSEASON)
+plot(performance(ROCRpred,'tpr','fpr'))
+plot(performance(ROCRpred,'tpr','fpr'),colorize=TRUE,
+     print.cutoffs.at=seq(0,1,by=0.05), text.adj=c(-0.2,1.7))
+```
+
+
+# Q1 LDA - offense only
+```{r}
+lda.fit = lda(POSTSEASON~ADJOE+EFG_O+TOR+ORB+FTR+X2P_O+X3P_O+ADJ_T, data=df2, subset=train_index)
+summary(lda.fit)
+lda.pred = predict(lda.fit,test)
+table(lda.pred$class,test$POSTSEASON)
+mean(lda.pred$class==test$POSTSEASON)
+```
+
+
+# Q1 LDA - defense only
+```{r}
+lda.fit = lda(POSTSEASON~ADJDE+EFG_D+TORD+DRB+FTRD+X2P_D+X3P_D, data=df2, subset=train_index)
+summary(lda.fit)
+lda.pred = predict(lda.fit,test)
+table(lda.pred$class,test$POSTSEASON)
+mean(lda.pred$class==test$POSTSEASON)
+```
+
+
+
