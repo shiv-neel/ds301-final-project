@@ -370,8 +370,9 @@ plot(ridge.train,xvar="lambda",label=TRUE)
 # Q2 ridge
 ```{r}
 library(glmnet)
-x = model.matrix(WinRate~ADJDE+TOR+TORD+ORB+DRB+FTR+X2P_O+X2P_D+X3P_O+X3P_D+ADJ_T,data=df2)[,-1] 
-Z = df[trainIdx,]$WinRate
+x = model.matrix(WinRate~ADJOE+ADJDE+TOR+TORD+ORB+DRB+FTR+X2P_O+X2P_D+X3P_O+X3P_D+ADJ_T,data=df)[,-1] 
+#x= model.matrix(WinRate~.,data=df2)[,-1]
+Z = df2[trainIdx,]$WinRate
 grid = 10^seq(10,-2,length=100)
 cv.out.ridge = cv.glmnet(x[trainIdx,],Z,alpha = 0, lambda = grid) 
 plot(cv.out.ridge)
@@ -389,8 +390,9 @@ plot(ridge.train,xvar="lambda",label=TRUE)
 #Lasso
 ```{r}
 library(glmnet)
-x = model.matrix(WinRate~ADJDE+TOR+TORD+ORB+DRB+FTR+X2P_O+X2P_D+X3P_O+X3P_D+ADJ_T,data=df2)[,-1] 
-Z = df[trainIdx,]$WinRate
+x = model.matrix(WinRate~ADJOE+ADJDE+TOR+TORD+ORB+DRB+FTR+X2P_O+X2P_D+X3P_O+X3P_D+ADJ_T,data=df2)[,-1] 
+#x= model.matrix(WinRate~.,data=df2)[,-1]
+Z = df2[trainIdx,]$WinRate
 grid = 10^seq(10,-2,length=100)
 cv.out.lasso = cv.glmnet(x[trainIdx,],Z,alpha = 1, lambda = grid) 
 plot(cv.out.lasso)
@@ -402,6 +404,5 @@ lasso.pred = predict(lasso.train, s=bestlambda2,newx=x[-trainIdx,])
 mean((lasso.pred-Z[-trainIdx])^2)
 final.lasso = glmnet(x[trainIdx,],Z,alpha=1,lambda=bestlambda2)
 coef(final.lasso)
-
 plot(lasso.train,xvar="lambda",label=TRUE)
 ```
