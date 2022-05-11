@@ -262,89 +262,29 @@ qdaAccuracy
 ```
 
 
-# Q2 Subset Selection
+# Q2 -- Subset Selection
 ```{r}
-forward = regsubsets(WinRate~ADJOE+ADJDE+TOR+TORD+ORB+DRB+FTR+X2P_O+X2P_D+X3P_O+X3P_D+ADJ_T, data=df, nvmax=24, method='forward')
-forward.summary = summary(forward)
-forward.summary
+best.subsets = regsubsets(WinRate~ADJOE+ADJDE+TOR+TORD+ORB+DRB+FTR+X2P_O+X2P_D+X3P_O+X3P_D+ADJ_T, data=df, nvmax=24)
+subsets.summary = summary(best.subsets)
+subsets.summary
 n = dim(df)[1]
-p = rowSums(forward.summary$which)
-forward.rss = forward.summary$rss
-forward.aic = n * log(forward.rss/n) + 2*p
-forward.bic = n * log(forward.rss/n) + p*log(n)
-plot(forward.rss)
-plot(forward.bic)
-min(forward.rss)
-forward.aic
-min(forward.bic)
-forward.bic
+p = rowSums(subsets.summary$which)
+best.rss = subsets.summary$rss
+best.aic = n * log(best.rss/n) + 2*p
+best.bic = n * log(best.rss/n) + p*log(n)
+plot(best.aic)
+plot(best.bic)
+best.aic
+best.bic
+best.rss
 ```
 
+# Q2 -- MLR using best subset
 ```{r}
-backward = regsubsets(WinRate~ADJOE+ADJDE+TOR+TORD+ORB+DRB+FTR+X2P_O+X2P_D+X3P_O+X3P_D+ADJ_T, data=df, nvmax=24, method='backward')
-backward.summary = summary(backward)
-backward.summary
-n = dim(df)[1]
-p = rowSums(backward.summary$which)
-backward.rss = backward.summary$rss
-backward.aic = n * log(backward.rss/n) + 2*p
-backward.bic = n * log(backward.rss/n) + p*log(n)
-plot(backward.rss)
-plot(backward.bic)
-min(backward.rss)
-backward.aic
-min(backward.bic)
-backward.bic
-```
-
-## Q2 -- MLR
-* NEED TO ADD CV*
-```{r}
-mlr.model = lm(WinRate~ADJOE+ADJDE+TOR+TORD+ORB+DRB+FTR+X2P_O+X2P_D+X3P_O+X3P_D+ADJ_T,data=train)
-
+mlr.model = lm(WinRate~ADJDE+TOR+TORD+ORB+DRB+FTR+X2P_O+X2P_D+X3P_O+X3P_D+ADJ_T,data=train)
 model.summary = summary(mlr.model)
+model.summary
 mean((test$WinRate - predict.lm(mlr.model, test)) ^ 2)
-```
-
-```{r}
-library(caret)
-library(class)
-
-df3 = df
-head(df3)
-standardized.X2 = scale(df3[,-26])  # -26 if full df, if you make it train then -19
-
-flds <- createFolds(df3$WinRate, k = 5, list = TRUE, returnTrain = FALSE)
-names(flds)
-
-K= c(1,3,5) # nearest neighbor values
-
-cv_error = matrix(NA, 5, 3)
-
-for(j in 1:3){
-  k = K[j]
-  for(i in 1:5){
-    test_index = flds[[i]]
-    testX = standardized.X2[test_index,]
-    trainX = standardized.X2[-test_index,]
-    
-    trainY = df3$WinRate[-test_index]
-    testY = df3$WinRate[test_index]
-    
-    knn.pred = knn(trainX,testX,trainY,k=k)
-    cv_error[i,j] = mean(testY!=knn.pred)
-  }
-}
-
-train.X = standardized.X2[train_index,]
-test.X = standardized.X2[test_index,]
-train.Y = df3$WinRate[train_index]
-test.Y = df3$WinRate[test_index]
-
-apply(cv_error,2,mean)
-
-knn.pred = knn(train.X,test.X,train.Y,k=5)
-mean(test.Y!=knn.pred)
 ```
 
 ```{r}
@@ -367,7 +307,7 @@ plot(ridge.train,xvar="lambda",label=TRUE)
 ```
 
 
-# Q2 ridge
+# Q2 -- Ridge Regression
 ```{r}
 library(glmnet)
 x = model.matrix(WinRate~ADJOE+ADJDE+TOR+TORD+ORB+DRB+FTR+X2P_O+X2P_D+X3P_O+X3P_D+ADJ_T,data=df)[,-1] 
@@ -387,7 +327,7 @@ coef(final.ridge)
 
 plot(ridge.train,xvar="lambda",label=TRUE)
 ```
-#Lasso
+# Q2 -- Lasso
 ```{r}
 library(glmnet)
 x = model.matrix(WinRate~ADJOE+ADJDE+TOR+TORD+ORB+DRB+FTR+X2P_O+X2P_D+X3P_O+X3P_D+ADJ_T,data=df2)[,-1] 
