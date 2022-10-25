@@ -1,0 +1,208 @@
+---
+title: "R Notebook"
+output:
+  html_document:
+    df_print: paged
+name: Shiva Neelakantan
+student_id: '616916317'
+---
+
+# Problem 1
+```{r}
+patient = read.table('./patient.txt')
+names(patient) = c('satisf', 'age', 'severe', 'anxiety')
+
+```
+## 1a
+```{r}
+model1 = lm(satisf~., patient)
+summary(model1)
+```
+
+## 1b
+```{r}
+rss = sum(resid(model1)**2)
+```
+RSS of model1 = 4248.841
+
+## 1c
+```{r}
+nullmodel = lm(satisf~1, patient)
+nullmodel$fitted.values
+nullrss = sum(resid(nullmodel)**2)
+```
+The null model's RSS is larger than the multiple linear regression model, because each value of satisfaction is being predicted by a constant, `1`. Hence, all the null model's fitted values will just be the mean value of satisf in the patient data frame. This causes much higher residuals, on average, than model1. 
+
+## 1d
+```{r}
+summary(model1)
+```
+
+H0 (null): B0=B1=B2=B3=0
+H1 (alternative): There exists Bj such that Bj != 0.
+
+F-statistic: 30.05
+p-value: 1.542e-10
+Assume a significance level (alpha) of 0.05
+
+Our p-value is significantly lower than our established significance level of 0.05. Thus, we can reject the null hypothesis; we have enough evidence that there is a roughly linear relationship between satisfaction and at least one of the predictors.
+
+## 1e
+Here, I will choose age as the predictor. 
+```{r}
+model.e = lm(satisf~age, patient)
+model.e
+summary(model.e)
+```
+
+Let B1 represent the age predictor's coefficient. 
+H0 (null): B1 = 0
+H1 (alternative): B1 != 0
+
+F-statistic: 71.48
+p-value: 9.058e-11
+Assume a significance level (alpha) of 0.05
+
+Our p-value is significantly lower than our established significance level of 0.05. Thus, we can reject the null hypothesis; we have enough evidence that there is a roughly linear relationship between one's satisfaction and his or her age.
+
+## 1f
+```{r}
+pred = predict(model1, data.frame(age=77, severe=68, anxiety=3), interval='prediction', level=0.95)
+pred
+```
+This interval offers the uncertainty from both the reducible and irreducible error of our model's predictions of several data points as well as a single value. This is not the best estimate, for a couple of reasons. First, the range contains a negative value, which is impossible in the real world. Second, the interval is extremey wide, making it hard to draw meaningful conclusions from it.
+
+## 1g
+```{r}
+diff = predict(lm(satisf~., patient), patient)
+```
+================================================================================
+
+# Problem 2
+
+## 2a.
+The significance level of 0.05 refers to the probability of concluding that there is a statistical difference between, for instance, the results of a placebo drug and an actual drug, even if there is no difference. In other words, we are saying there is a 5% chance that we make the wrong conclusion, due to randomness. 
+
+## 2b.
+Although technically, the scientist is correct in that our anxiety predictor does not make a significant difference in our model, due to the p-value of 0.0647, I believe that more data should be gathered and tested with a new model. This is because the p-value is extremely close to our significance level, is a bit ambiguous. Given that the alpha we choose is arbitrary, more testing should occur to ensure that the p-value is indeed greater than 0.05, and is not just an outlier. For instance, if we were to choose a more generous significance level, such as 0.10, the anxiety predictor would pass as statistically significant. 
+
+## 2c.
+The scientist's approach seems very naïve and problematic. First of all, there is a chance he could make a mistake in each of the individual tests. For instance, if he carries out 12 individual tests at alpha of 0.10, there is a high probability that we see at least one of the predictors being significant just by chance. 
+
+P(at least one significant predictor) 
+  = 1 - P(no significant predictors)
+  = 1 - (1 - 0.1) ** 12
+  = 1 - (0.9) ** 12
+  = 0.72
+  
+Thus, there is a 72% chance that the scientist concludes that there is at least one significant predictor, without us even knowing any of the T-statistics or p-values. Therefore, his approach may not be the best for his goal of determining if one of the 12 predictors is significant. 
+
+================================================================================
+
+# Problem 3
+
+
+```{r}
+library(ISLR2)
+```
+## 3a.
+```{r}
+model.carseats = lm(Sales~., Carseats)
+summary(model.carseats)
+```
+
+## 3b.
+
+H0: B1==B2==...==Bp==0, where B1, B2, ..., Bp are all the predictors.
+H1: There exists one predictor Bk such that Bk != 0
+
+Test Statistic: 
+```{r}
+model.null = lm(Sales~1, Carseats)
+rssR = sum(resid(model.null)**2)
+rssF = sum(resid(model.carseats)**2)
+dfR = 400-1
+dfF = 400-(11+1)
+Fstar = ((rssR - rssF)/(dfR-dfF)) / (rssF / dfF)
+Fstar
+```
+Null Distribution: when e ~ N(0, sigma ** 2) and we assume H0, F* has a null distribution of F_(11, 388).
+F-statistic: 243.37
+p-value from given output: 2.2e-16
+
+Conclusion: At a significance level of 0.05, our p-value indicates that we can reject the null hypothesis. We have enough statistical evidence that at least one of the predictors can predict Sales.
+
+## 3c.
+```{r}
+model.price = lm(Sales~Price, Carseats)
+summary(model.price)
+```
+H0: Bp == 0
+H1: Bp != 0
+Null Distribution: when e ~ N(0, sigma ** 2) and we assume H0, F* has a null distribution of F_(11, 388).
+F-statistsic: 98.25
+p-value: 2.2e-16
+
+Conclusion: At a significance level of 0.05, our p-value indicates that we can reject the null hypothesis. We have enough statistical evidence that Price can be a predictor of Sales. 
+
+# 3d.
+According to the model relating Sales to Price, Standard Error = 0.6328. Standard Deviation is just SE * sqrt(n). Thus,
+
+sigma ** 2
+  = (0.6328 * sqrt(400)) ** 2
+  = (12.656) ** 2
+  = 160.174
+
+# 3e.
+The fitted model relating Sales to Price has an R^2  of 0.198. This scaled, unit-less value represents the variability in Sales represented by our model. In other words, a higher R^2 implies more variability from the best-fit line, while an R^2 closer to 0 represents minimal variability from the best-fit line. Our model has a rather low R^2, of only 0.198. This signifies a strong, linear correlation between Sales and Price. This conclusion is also reflected by a plot relating the two columns, as shown below. 
+
+```{r}
+library(ggplot2)
+ggplot(Carseats, aes(Price, Sales)) + geom_point()
+```
+
+# 3f.
+```{r}
+model.shelving = lm(Sales~ShelveLoc, Carseats)
+summary(model.shelving)
+```
+This model shows us the regression coefficients associated with shelving location. Note that this variable is categorical; therefore, ShelveLocGood and ShelveLocBad will not both be included in the coefficients, because one implies the opposite of the other.  ShelveLocGood has a coefficient estimate of roughly 4.69, and ShelveLocMedium has a coefficient estimate of roughly 1.78.
+
+## 3g.
+```{r}
+carseat.test1 = predict(model.carseats, data.frame(
+  CompPrice=mean(Carseats$CompPrice),
+  Income=median(Carseats$Income),
+  Advertising=15,
+  Population=500,
+  Price=50,
+  ShelveLoc='Good',
+  Age=30,
+  Education=10,
+  Urban='Yes',
+  US='Yes'
+  ), interval='prediction', level=0.99)
+carseat.test1
+```
+For a confidence level of 0.99, we predict a value of 18.72969, and get a prediction interval of (18.00874, 21.45063). 
+
+## 3h.
+```{r}
+carseat.test2 = predict(model.carseats, data.frame(
+  CompPrice=mean(Carseats$CompPrice),
+  Income=median(Carseats$Income),
+  Advertising=15,
+  Population=500,
+  Price=50,
+  ShelveLoc='Good',
+  Age=30,
+  Education=10,
+  Urban='Yes',
+  US='Yes'
+  ), interval='confidence', level=0.99)
+carseat.test2
+```
+For a confidence level of 0.99, we predict a value of 18.72969, and get a confidence interval of (18.06131, 19.39806). 
+
+## 3i.
+The two intervals offer the same prediction mean of 18.72969. However, their intervals were different. The confidence interval has a narrower interval than the prediction interval. This is attributed to the fact that a CI does not consider irreducible error, while a PI does. Thus, the PI must offer a wider range to account for irreducible noise in the model.  

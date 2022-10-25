@@ -1,0 +1,225 @@
+---
+title: "Homework 4"
+output: html_notebook
+studentID: 616916317
+author: 'Shiva Neelakantan'
+---
+
+# PROBLEM 1
+
+```{r}
+library(dplyr)
+insurance = read.csv('./insurance.csv')
+head(insurance)
+```
+
+## a
+```{r}
+insurance$gender = as.factor(insurance$gender)
+insurance$gender = relevel(insurance$gender, ref='female')
+insurance$smoker = as.factor(insurance$smoker)
+insurance$smoker = relevel(insurance$smoker, ref='no')
+insurance$region = as.factor(insurance$region)
+insurance$region = relevel(insurance$region, ref='southwest')
+str(insurance)
+```
+
+## b
+```{r}
+fit = lm(charges~age+bmi+gender, insurance)
+summary(fit)
+```
+
+## c
+```{r}
+insurance$gendermale = as.integer(insurance$gender == 'male')
+males.model = lm(charges~age+bmi+gender+gendermale, subset(insurance, gender='male'))
+
+females.model = lm(charges~age+bmi+gender+gendermale, subset(insurance, gender='female'))
+
+summary(males.model)
+summary(females.model)
+```
+
+## d
+```{r}
+males=insurance[insurance$gender=='male', ]
+females=insurance[insurance$gender=='female', ]
+
+fit_males = lm(charges~bmi+age, males)
+fit_females = lm(charges~bmi+age, females)
+
+summary(fit_males)
+summary(fit_females)
+```
+
+## e
+When we have gender as a dummy variable, as seen in part c, our error for the predictors are all lower, as the model takes a categorical approach to considering the dichotomy between the male and female predictors. This finding is seen for both the male and female subsets of the insurance data.
+
+## f
+These results are not necessarily contradictory. R^2 is simply a measure of the variability in our response that can be explained by the model. There is a chance that our data are modeled by a linear relationship, but they could have a very high spread, which would increase the residual sum of squares, and in turn, the R^2 as well. Thus, although the predictors are significant, our R^2 can still be low. 
+
+================================
+
+# PROBLEM 2
+
+## a
+Multicollinearity can present itself as a problem when making accurate predictions. This is because if two variables within a data set have a natural correlation to one another, such as, for instance, if fuel economy and engine size were two predictors, then they may introduce unwanted bias into the model, affecting the other predictors. Thus, multicollinearity can affect our ability to make accurate predictions.
+
+## b
+```{r}
+set.seed(42)
+x1 = runif(100)
+x2 = 0.8*x1 + rnorm(100,0,0.1)
+cor(x1, x2)
+Y = 3 + 2 * x1 + 4 * x2
+```
+## c
+```{r}
+df = data.frame(Y, x1, x2)
+train = df[seq(50), ]
+test = df[seq(51,100), ]
+df.sim = lm(Y~x1+x2, df)
+summary(df.sim)
+
+test.mse = mean((test$Y - predict.lm(df.sim, test)) ^ 2)
+test.mse
+```
+
+## d
+```{r}
+mse.all = c()
+for (i in seq(2500)) {
+  x1 = runif(100)
+  x2 = 0.8*x1 + rnorm(100,0,0.1)
+  Y = 3 + 2 * x1 + 4 * x2
+  df = data.frame(Y, x1, x2)
+  train.split = df[seq(50), ]
+  test.split = df[seq(51,100), ]
+  model = lm(Y~., train.split)
+  test.mse = mean((test.split$Y - predict.lm(model, test.split)) ^ 2)
+  mse.all = append(mse.all, test.mse)
+}
+mean(mse.all)
+hist(mse.all, breaks = seq(min(mse.all), max(mse.all), length.out = 15))
+```
+The MSEs are skewed to the right; the vast majority of test MSEs are close to 0, with a little bit of spread.
+
+## e
+```{r}
+set.seed(24)
+x1 = runif(100)
+x2 = rnorm(100,0,1)
+Y = 3 + 2 * x1 + 4 * x2
+cor(x1, x2)
+```
+## f
+```{r}
+mse.all = c()
+for (i in seq(2500)) {
+  x1 = runif(100)
+  x2 = rnorm(100,0,1)
+  Y = 3 + 2 * x1 + 4 * x2
+  df = data.frame(Y, x1, x2)
+  train.split = df[seq(50), ]
+  test.split = df[seq(51,100), ]
+  model = lm(Y~., train.split)
+  test.mse = mean((test.split$Y - predict.lm(model, test.split)) ^ 2)
+  mse.all = append(mse.all, test.mse)
+}
+mean(mse.all)
+hist(mse.all, breaks = seq(min(mse.all), max(mse.all), length.out = 15))
+```
+The observations are very similar to the previous histogram; MSEs are skewed to the right; the vast majority of test MSEs are close to 0, with a little bit of spread.
+
+## g
+We can see from the two histograms and mean MSEs that there is not much difference. Therefore, we can conclude that when the predictors have virtually no correlation, as well as when they have extremely high correlation, the prediction accuracy distribution is still pretty similar. Thus, multicollinearity did not have a significant effect on prediction accuracy. 
+
+# PROBLEM 3
+
+## a
+```{r}
+library(ggplot2)
+library(ISLR2)
+
+plot(Auto)
+```
+Virtually all the predictors appear to have some sort of roughly linear relationship with mpg. However, variables like year and name do not seem to have much correlation, just from viewing the plots with the naked eye.
+
+## b
+```{r}
+mpgmodel = lm(mpg~.-name, Auto)
+summary(mpgmodel)
+```
+Our model's most significant predictors are the origin, weight, and year predictors. 
+
+## c
+Yes, there is a significant relationship between mpg and origin, weight, year, and displacement. This is signified by these predictors' p-values being much lower than my established significance level of 0.05.
+
+## d
+The year predictor's coefficient suggests a positive correlation between mpg and year. Alternatively stated, newer models have higher mpg than older models. This makes sense, because technology and innovation do produce better engines/cars over time. 
+
+## e
+```{r}
+library(car)
+vif(mpgmodel)
+```
+A couple of the predictors, namely, weight, cylinders, and displacement, have high VIF scores greater than 10. These predictors are most likely correlated (especially cylinders and displacement, as more cylinders usually means more displacement). Thus, multicollinearity could interfere with our ability to make accurate predictions.
+
+## f
+```{r}
+summary(lm(mpg~.-name, Auto))
+```
+The R^2 of our model is 0.8182. This high R^2 coefficient signifies that overall, our model holds a pretty solid prediction accuracy, with relatively low spread/residuals on average.
+## g
+```{r}
+#plot(Auto$mpg, Auto$horsepower)
+library(MASS)
+#model = lm(mpg~., Auto)
+model = lm(mpg~log(horsepower), Auto)
+#bc = boxcox(model)
+#lambda = bc$x[which.max(bc$y)]
+
+model2 = lm(mpg~log(year), Auto)
+bc = boxcox(model2)
+#lambda2 = bc$x[which.max(bc$y)]
+#lambda2
+
+transformed.model = lm(mpg~cylinders+displacement+log(horsepower)+weight+acceleration+log(year)+origin, Auto)
+
+summary(transformed.model)
+```
+
+# PROBLEM 4
+
+## a
+Y = B0 + B1X1 + B2X2 + ... + BpXp
+
+## b
+First, split the data into two subsets, namely, training and testing. Train a model using the testing data, and then use this model to calculate predictions of the test data. The sum of squared differences between each test data and its model prediction is the least squares estimate. 
+
+## c
+The estimate is trustworthy to an extent, as it relies on a couple key assumptions. First, we must assume that the relationship between the response and its predictors is roughly linear, meaning if a predictor goes up, we should reasonably expect the response to also go up (or down, if the correlation is negative). When we have a lot of predictors, this becomes a very generalized assumption to be making. Next, we must assume theoretically that there is no noise, or irreducible error. Obviously, this assumption cannot hold in the real world, as there will always be unaccounted disruption in our model that we can't do much about. Furthermore, the least squares estimate we do get could be an outlier -- meaning, we would have to run tests many times with different splits of data to be confident in our least squares estimator. Thus, it is only trustworthy to an extent.
+
+## d
+E(Y) = Bhat0 + Bhat1X1 + Bhat2X2 + ... + BhatpXp + epsilon
+We can quantify our uncertainty by observing standard error (SE) of the predictors.
+
+## e
+E(Y) = Yhat
+We can quantify any uncertainty about our prediction by using a confidence interval. Using a CI, we can specify the degree of confidence we have that the true value of Y falls within a certain interval.
+
+## f
+We can evaluate our model's prediction accuracy by calculating its test MSE over multiple epochs/iterations of splitting the data, training the model with the training data, and fitting the testing data. The bias-variance tradeoff tells us that as we increase the flexibility of the model, and start overfitting the model to our data, the bias^2 will decrease, and the variance, or standard deviation ^2, will increase, for future predictions using the model.
+
+## g
+Statistical inference is the application of methods to analyze sample data for the sake of estimating the true parameters of a population. In the context of linear regression, we use sample data to create a model that we expect to represent the population relationship between the response and predictors. Ideally, if we were to input values for the predictors into our model, we should get a response that is reflective of what would actually happen if the data value was real. 
+
+## h
+There are a few problems that may arise with multiple regression.
+
+1. We must assume that the relationship between the response and predictor(s) is roughly linear. This can cause issues when we have many predictors, because we can't guarantee that every single predictor has a linear relationship with the response, but to use MLR, we must make this assumption. To resolve this issue, we can either drop predictors that are not linearly related, or we can apply a transformation on them, such as logarithmic or exponential, so that the predictor is linearly related to the response.
+
+2. E(epsilon) = 0. Alternatively stated, we must assume theoretically that there is no noise, or irreducible error. Obviously, this assumption cannot hold in the real world, as there will always be unaccounted disruption in our model that we can't do much about. Honestly, there isn't much we can do about this; the issue with irreducible error is exactly that -- it's irreducible. To use MLR, we must simply accept the fact that epsilon will be a byproduct of MLR.
+
+3. Overfitting: The more we train our model with the same subset of training data, the more it will favor that data, thus resulting in overfitting. This can be an issue, because if our training data is not a perfect representation of the population, then our model will be flawed. To avoid overfitting, one thing we can do is consistently refresh the train-test split, so that our model is fed a new subset of data for each time we train it.

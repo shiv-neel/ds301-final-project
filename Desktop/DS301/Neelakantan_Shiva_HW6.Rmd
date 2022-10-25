@@ -1,0 +1,176 @@
+---
+title: "Neelakantan_Shiva_HW6"
+studentid: 616916317
+author: "Shiva Neelakantan"
+date: '2022-03-21'
+output: html_document
+---
+
+# Problem 1
+=====
+
+## 1a
+
++ Ryan McNally
++ Ryan Schehovic
++ Saketh Jonnadula
+
+## 1b
+FUTURE ESPN ANALYSTS
+
+## 1c
+[Link to our data set](https://www.kaggle.com/datasets/andrewsundberg/college-basketball-dataset)
+
+## 1d
+This project will contain various components of work, including but not limited to data cleansing and manipulation, model generation, data visualization, and presentation/report creation. We plan to each contribute to every component of the project, rather than each person individually having to work on an entire component. To ensure each member is contributing his fair share, we will have weekly meetings to plan and delegate our work for the week.
+
+# Problem 2
+=====
+
+## 2a
+
+When doing subset selection, each subsequent model does not need to necessarily include all the predictors from the previous model plus another predictor (i.e. M(p+1) doesn't need to have all the predictors from Mp). For instance, we have seen in the baseball hitters example during class that for some of the models, e.g. M7, has a very different set of predictors compared to M6. 
+
+This is because sometimes, if we just add another predictors to our current subset of predictors, we will only decrease the RSS by a very small amount, whereas a completely different subset of predictors may yield a much lower RSS.
+
+## 2b
+
+On the other hand, when doing forward selection, each subsequent model will contain all the previous model's predictors plus another predictor (i.e. M(p+1) will have all the predictors from Mp). This is due to the greedy nature of the algorithm. 
+
+When doing forward selection, we initially start with a null model, M0, with Y ~ 1. Next, we add whichever predictor will yield the lowest RSS to the model (M0). Then, we add whichever remaining predictor will yield the lowest RSS to the previous model (M1), and so on. In doing so, we see that each model, M0, M1, M2,...,Mp must contain the same predictors as its previous model. 
+
+## 2c
+
+When doing subset selection, for each value of k, we select the model with the smallest RSS among each of the possible models with k predictors. When doing forward selection, for each value of k, we add an additional predictor to the model we previous computed with k-1 predictors. When doing backward selection, for each value of k, we select a model that contains all the predictors in the model with k+1 predictors, excluding one. 
+
+With these definitions in mind, the model with k predictors that has the smallest training MSE should theoretically be the one we get from *subset selection*. I draw this conclusion because it looks at every possible model for each value of k, so it is more likely to find the best possible model. 
+
+## 2d
+
+In terms of test MSE, there is not necessarily a clear, guaranteed answer, like in our conclusion from 2c. Any of our selection procedures could get lucky and yield a smaller test MSE jus by fluke.
+
+However, just by speculation, best subset selection may yield the smallest test MSE, due to the fact that it takes into account way more models than forward and backward selection. But once again, it could also be the case that the other two selection procedures select a model with a lower test MSE as well. 
+
+# Problem 3
+=====
+
+```{r}
+library(ISLR2)
+t = dim(College)[1]
+n = floor(t * 0.9)
+train_idx = sample(seq(t), size=n)
+train = College[train_idx, ]
+test = College[-train_idx, ]
+```
+
+## 3a
+
+```{r}
+library(leaps)
+forward = regsubsets(Apps~., College, nvmax=dim(College[[2]]), method='forward')
+backward = regsubsets(Apps~., College, nvmax=dim(College[[2]]), method='backward')
+```
+I implemented forward and backward selection on the full data set as opposed to the training set, because AIC and BIC metrics serve as indirect measures for our test MSE. Thus, we want to look at the data set as a whole, rather than a split of the data. 
+
+## 3b
+```{r}
+# forward
+forward.summary = summary(forward)
+n = dim(College)[1]
+p = rowSums(forward.summary$which)
+forward.rss = forward.summary$rss
+forward.aic = n * log(forward.rss/n) + 2*p
+forward.bic = n * log(forward.rss/n) + p*log(n)
+plot(forward.aic)
+plot(forward.bic)
+(forward.aic)# 12
+(forward.bic)# 11
+```
+
+
+```{r}
+backward.summary = summary(backward)
+n = dim(College)[1]
+p = rowSums(backward.summary$which)
+backward.rss = backward.summary$rss
+backward.aic = n * log(backward.rss/n) + 2*p
+backward.bic = n * log(backward.rss/n) + p*log(n)
+plot(backward.aic)
+plot(backward.bic)
+min(backward.aic)# 12
+min(backward.bic)# 11
+```
+
+For both forward and backward stepwise selection, each of their AIC and BIC values between the selection methods are the same. Even when plotted, they follow virtually the same patterns, for both AIC and BIC. Both forward and backward selections' lowest AIC scores were for a model with 12 predictors, and their lowest BIC scores were also for a model with 11 predictors.
+
+## 3c
+```{r}
+bestsubsets = regsubsets(Apps~., College, nvmax=dim(College)[[2]])
+n = dim(College)[[1]]
+p = rowSums(summary(bestsubsets)$which)
+rss = summary(bestsubsets)$rss
+AIC = n * log(rss/n) + 2*p
+BIC = n * log(rss/n) + p*log(n)
+min(AIC)
+min(BIC)
+```
+We use the entire data set rather than just the training set for the same reason as mentioned in 3b. The minimum AIC and BIC scores are much higher with best subset selection in comparison to the previous calculations using forward and backward selection in part (b).
+
+## 3d
+```{r}
+forward2 = regsubsets(Apps~., train, nvmax=17, method='forward')
+errs = c()
+for (i in 1:17) {
+  test.matrix = model.matrix(Apps~., test)
+  m = coef(forward2, id=i)
+  ypred = test.matrix[, names(m)]%*%m
+  errs[i] = mean((test$Apps - ypred) ^ 2)
+}
+plot(errs)
+errs[5]
+```
+For this specific trial, the model with the minimum test MSE was the model with 5 predictors, with a test MSE of 981040.8.
+
+## 3e
+```{r}
+t = dim(College)[1]
+n = floor(t * 0.9)
+train_idx = sample(seq(t), size=n)
+train = College[train_idx, ]
+test = College[-train_idx, ]
+
+forward3 = regsubsets(Apps~., train, nvmax=17, method='forward')
+errs = c()
+for (i in 1:17) {
+  test.matrix = model.matrix(Apps~., test)
+  m = coef(forward2, id=i)
+  ypred = test.matrix[, names(m)]%*%m
+  errs[i] = mean((test$Apps - ypred) ^ 2)
+}
+plot(errs)
+errs[6]
+```
+
+For this specific trial, the model with the minimum test MSE was the model with 5 predictors, with a test MSE of 1858739. This is very different from the test MSE computed in part (d). We can see from this that using AIC and BIC are better criteria during forward selection. As seen in part (c), the AIC and BIC scores were a lot more predictable and close together, which allows for a more consistent scoring system. In comparison, using test MSE as a criteria feels rather volatile, as the score drastically changes each time, and the plots do not seem to follow a consistent pattern for each split.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

@@ -1,0 +1,358 @@
+---
+title: "Shiva_Neelakantan_HW7"
+author: "Shiva Neelakantan"
+date: '2022-03-28'
+studid: 616916317
+output: html_document
+---
+
+# 1
+
+## 1a
+
+When lambda = 0, B^lasso defaults to the least squares estimate. 
+
+## 1b
+
+When lambda = inf, B^lasso = 0.
+
+## 1c
+
+Attached in the folder
+
+## 1d
+
+Attached in the folder
+
+=====
+
+# 2
+
+## 2a
+
+```{r}
+X = rnorm(100, 0, 1)
+e = rnorm(100, 0, 1)
+```
+
+## 2b
+```{r}
+library(leaps)
+```
+
+```{r}
+b0 = 3
+b1 = 5
+b2 = 4
+b3 = 2
+Y = b0 + (b1 * X) + (b2 * X^2) + (b3 * X^3) + e
+df = data.frame(X, Y)
+```
+
+## 2c
+
+```{r}
+Xc = X
+for (i in 2:10) {
+  Xc = cbind(Xc, X^i)
+}
+colnames(Xc) = paste('x', 1:ncol(Xc), sep='')
+dfc = data.frame(cbind(Y, Xc))
+regfit = regsubsets(Y~., data=dfc, nvmax=10)
+regsum = summary(regfit)
+```
+
+```{r}
+plot(regsum$bic, xlab='p', ylab='AIC')
+plot(regsum$rss, xlab='p', ylab='RSS')
+plot(regsum$bic, xlab='p', ylab='BIC')
+```
+We can see that for RSS, AIC, and BIC, they all have a relative minimum when p = 3.
+
+
+
+
+## 2d
+
+```{r}
+coef(regfit,which.min(regsum$bic))
+coef(regfit,which.min(regsum$adjr2))
+```
+
+## 2e
+
+```{r}
+regfit.forward = regsubsets(Y~., data=dfc, nvmax=10, method='forward')
+regsum.forward = summary(regfit.forward)
+
+plot(regsum.forward$bic, main='Forward selection', ylab='BIC')
+plot(regsum.forward$adjr2, main='Forward Selection', ylab='adjusted r^2')
+```
+
+```{r}
+regfit.backward = regsubsets(Y~., data=dfc, nvmax=10, method='backward')
+regsum.backward = summary(regfit.backward)
+
+plot(regsum.backward$bic, main='Backward selection', ylab='BIC')
+plot(regsum.backward$adjr2, main='Backward Selection', ylab='adjusted r^2')
+```
+
+Both forward and backward selection prefer the model with 3 predictors, using both adjr2 and bic metrics.
+
+## 2f
+
+```{r}
+library(glmnet)
+```
+
+```{r}
+set.seed(0)
+
+Xnew = X
+for(i in 2:10){
+    Xnew <- cbind(Xnew,X^i)
+}
+colnames(Xnew) = paste("x", 1:ncol(Xnew), sep="")
+df2 = data.frame(cbind(Y, Xnew))
+
+grid = 10^seq(10,-2,length= nrow(df2))
+train = sample(1:nrow(df2), nrow(df2)/2)
+test = (-train)
+ytest = Y[test]
+               
+x2 = model.matrix(Y~.,df2)[,-1]
+y2 = df[,1]
+
+cv.out = cv.glmnet(x2[train,], y2[train], alpha=1)
+
+plot(cv.out)
+
+lambdalasso = cv.out$lambda.min
+log(lambdalasso)
+
+out = glmnet(x2, y2, alpha = 1, lambda=grid)
+predict(out, type="coefficients", s=lambdalasso)
+```
+
+The results shown above demonstrate that only the predictors for X1, X2, X3, and X10 were used in the model. Thus, these are the best ones that contribute to the model. 
+
+## 2g
+
+```{r}
+b7 = 7
+yf = b0 + b7 * X**7 + e
+df = data.frame(cbind(yf, Xnew))
+
+regfit <- regsubsets(yf~ ., data=df2, nvmax=10) 
+regsum <- summary(regfit)
+
+par(mfrow=c(2,2))
+
+coef(regfit,which.min(regsum$cp))
+```
+
+The coefficients are what we had expected for the first 5 coefficients.
+
+## 3a
+
+```{r}
+library(ISLR2)
+Hitters = na.omit(Hitters)
+n = nrow(Hitters)
+X = model.matrix(Salary ~.,data=Hitters)[,-1]
+Y = Hitters$Salary
+set.seed(1)
+train = sample(1:nrow(X), nrow(X)/2)
+test=(-train)
+Y.test = Y[test]
+```
+
+## 3b
+
+```{r}
+ridgemodel = glmnet(X,Y,alpha=0, lambda=0.013)
+cff = coef(ridgemodel,s=ridgemodel$lambda.min)
+cff
+```
+Most of the values fall within the range [-0.5, 0.5].
+
+## 3c
+
+```{r}
+ridgemodel = glmnet(X,Y,alpha=0, lambda=10^10)
+cff2 = coef(ridgemodel,s=ridgemodel$lambda.min)
+```
+
+All the values shown above are pretty miniscule, excluding the intercept. This shows that as lambda approaches infinity, our numbers will approach 0.
+
+## 3d
+
+As lambda increases, the regression coefficients will decrease. Conversely, as lambda decreases, are regression coefficients will increase.
+ 
+## 3e
+
+```{r}
+l2_norm = norm(cff, type = "2") 
+l2_norm
+```
+
+I would expect the l2 norm for lambda=0.013 to be smaller than the l2 norm for lambda = 10^10, because the l2 norm calculates the distance something is from its origin, and the lambda 10^10 coefficients are significantly smaller, so they have larger impacts.
+
+## 3f
+
+```{r}
+grid = 10^seq(10,-2,length=100)
+cv.out.ridge = cv.glmnet(X[train,],Y[train],alpha = 0, lambda = grid) 
+plot(cv.out.ridge)
+lambda_ridge_min = cv.out.ridge$lambda.min
+lambda_ridge_min
+```
+
+## 3g
+
+```{r}
+lambda_ridge_1se=cv.out$lambda.1se
+lambda_ridge_1se
+```
+
+## 3h
+```{r}
+grid = 10^seq(10,-2,length=100)
+cv.out.lasso = cv.glmnet(X[train,],Y[train],alpha = 1, lambda = grid) 
+lambda_lasso_min = cv.out.lasso$lambda.min
+lambda_lasso_min
+
+lasso.train = glmnet(X[train,],Y[train],alpha=1,lambda=grid)
+
+which(grid==lambda_lasso_min)
+lasso.train$lambda[77]
+coef(lasso.train)[,77]
+
+lasso.pred = predict(lasso.train,s=lambda_lasso_min,newx=X[test,])
+mean((lasso.pred-Y.test)^2)
+
+final.lasso = glmnet(X,Y,alpha=1,lambda=lambda_lasso_min)
+coef(final.lasso)
+
+lambda_lasso_1se=cv.out$lambda.1se
+lambda_lasso_1se
+```
+
+## 3i
+
+```{r}
+pred1=predict(cv.out.lasso, newx=X[test,], s=lambda_lasso_min)
+pred2=predict(cv.out.lasso, newx=X[test,], s=lambda_lasso_1se)
+pred3=predict(cv.out.ridge, newx=X[test,], s=lambda_ridge_min)
+pred4=predict(cv.out.ridge, newx=X[test,], s=lambda_ridge_1se)
+
+e1=mean((Y.test-pred1)^2)
+e2=mean((Y.test-pred2)^2)
+e3=mean((Y.test-pred3)^2)
+e4=mean((Y.test-pred4)^2)
+e1
+e2  
+e3
+e4
+```
+
+## 3j
+
+```{r}
+ridge_model = glmnet(X,Y,alpha=0, lambda=lambda_ridge_min)
+ridge_model2 = glmnet(X,Y,alpha=0, lambda=lambda_ridge_1se)
+cff1 = coef(ridge_model,s=ridge_model$lambda.min)
+cff2 = coef(ridge_model2,s=ridge_model$lambda.min)
+lasso_model = glmnet(X,Y,alpha=1, lambda=lambda_lasso_min)
+lasso_model2 = glmnet(X,Y,alpha=1, lambda=lambda_lasso_1se)
+cff3 = coef(lasso_model,s=ridge_model$lambda.min)
+cff4 = coef(lasso_model2,s=ridge_model$lambda.min)
+cff1
+cff2
+cff3
+cff4
+```
+
+The coefficients seem to be pretty similar. Some predictors are larger for their ridge constituents, while others are larger for their lasso constituents. 
+
+## 3k
+
+Receiving lots of hits and walks will have a large positive effect. Furthermore, scoring runs and hitting home runs will help as well. 
+
+# 4
+
+## 4a
+
+```{r}
+head(College)
+indexes=sample(1:nrow(College),size=0.3*nrow(College))
+train=College[-indexes,]
+test=College[indexes,]
+```
+
+## 4b
+
+```{r}
+model=lm(Apps~.,data=train)
+summary(model)
+pred=predict(model,newdata=test)
+MSE=mean((test$Apps-pred)^2)
+MSE
+
+subfit = regsubsets(Apps~., data=train, nvmax=19, nbest=1)
+subsum=summary(subfit)
+```
+
+## 4c
+
+```{r}
+xtrain=model.matrix(Apps~.,train)[,-1]
+ytrain=train$Apps
+xtest=model.matrix(Apps~.,test)[,-1]
+ytest=test$Apps
+cv.out=cv.glmnet(xtrain,ytrain,alpha=0)
+plot(cv.out)
+```
+
+Ridge regression needs to use scaling so that the coefficients are penalized appropriately.
+
+## 4d
+
+```{r}
+bestlambda = cv.out$lambda.min
+bestlambda 
+```
+
+## 4e
+
+```{r}
+model =glmnet(xtrain,ytrain,alpha=0,lambda=bestlambda)
+model$beta
+pred=predict(model,s=bestlambda,newx=xtest)
+MSE=mean((pred-ytest)^2)
+MSE
+```
+
+## 4f
+
+```{r}
+cv.out = cv.glmnet(xtrain,ytrain,alpha=1)
+plot(cv.out)
+bestlambda = cv.out$lambda.min
+model = glmnet(xtrain,ytrain,alpha=1,lambda=bestlambda)
+model$beta
+pred = predict(model,s=bestlambda, newx=xtest)
+MSE = mean((pred-ytest)^2)
+MSE
+bestlambda
+```
+Optimal lambda: 1.817
+num non-zero coefficients: 8
+test MSE: 1736927
+
+## 4g
+
+Smallest Test MSE was for the linear model. The test errors are very large, but still relatively similar. Nonetheless, ridge regression ends up being the largest one. 
+
+
+

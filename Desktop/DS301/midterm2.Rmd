@@ -1,0 +1,139 @@
+---
+title: "Midterm 2"
+name: "Shiva Neelakantan"
+studentid: 616916317
+output: html_notebook
+---
+
+Signature: I certify that this exam is my original work and I have upheld ISU's academic dishonesty policy. I agree to not disclose the content of this exam to students not in this class.
+
+# Problem 1
+
+## 1a
+
+|  | Subset | Forward | Backward | Criteria Value |
+| --- | --- | --- | --- | --- |
+| M1 |  Y~X1 | Y~X1 | Y~X1 | average RSS for model with 1 predictor |
+| M2 | Y~X1+X4 | Y~X1+X4 | Y~X1+X3 | average RSS for model with 2 predictors |
+| M3 | Y~X1+X2+X3 | Y~X1+X3+X4 | Y~X1+X2+X3 | average RSS for model with 3 predictors |
+| M4 | Y~X1+X2+X3+X4 | Y~X1+X2+X3+X4 | Y~X1+X2+X3+X4 | average RSS for model with 4 predictors |
+| Final Model | Y~X1+X2+X3+X4 | Y~X1+X2+X3+X4 | Y~X1+X2+X3+X4 | lowest RSS from M1, M2, M3, and M4 |
+
+## 1b
+
+I do believe that the test MSE would be close to my colleague's estimate of 485.1199. This is because as noted in lecture, as lambda approaches 0, our model will default to regularized least squares regression. Since the acquired lambda is 0.5, which is very close to 0, we can simply calculate the mean squared error using the colleague's last line of code from the snippet. 
+
+## 1c
+
+True. When the decrease in variance is enough to offset the increase in bias, our tuning parameter will be optimized, which will give us higher prediction accuracy. 
+
+## 1d
+
+False. Lasso is less flexible than least squares linear regression. Lasso gives us improved prediction accuracy when its decrease in variance exceeds its increase in bias. This is explained by the bias-variance trade-off. When least squares estimates have very high variance, lasso tends to yield low variance at the cost of small increase in bias, which offers more accurate predictions.  
+
+# Problem 2
+
+## 2a
+
+```{r}
+heart = read.table('./SAheart.data', sep=",",head=T,row.names=1)
+heart.logfit = glm(chd~age, data=heart, family='binomial')
+summary(heart.logfit)
+```
+The maximum likelihood estimate for Beta0 is -3.521710, while the MLE for Beta1 (age) is 0.064108.
+
+## 2b
+
+```{r}
+library(dplyr)
+fifty.yo = heart %>% filter(age == 50)
+expected.prob = nrow(fifty.yo %>% filter(chd == 1)) / nrow(fifty.yo)
+expected.prob
+```
+
+The expected probability that an individual has chd, given that they are 50 years old, is 0.375.
+
+## 2c
+
+```{r}
+B = 500
+exp.prob = rep(0,500)
+n = dim(fifty.yo)[1]
+for(b in 1:B){
+  index = sample(1:n,n,replace=TRUE)
+  bootsample = fifty.yo[index,]
+  p = nrow(bootsample %>% filter(chd == 1)) / nrow(fifty.yo)
+  exp.prob[b] = p
+}
+
+sqrt(sum((exp.prob-mean(exp.prob))^2)/(B-1))
+```
+The standard error of the probability obtained in part (1b) is around 0.1688912.
+
+## 2d
+
+```{r}
+logit <- function(x,beta0,beta1) {
+  1/(1+exp(-beta0 - beta1*x))
+}
+plot(heart$chd~heart$age, las=1, pch=20)
+abline(h=0.5, col='blue')
+curve(logit(x, heart.logfit$coefficients[1], heart.logfit$coefficients[2]), col='green', add=TRUE)
+```
+We can see from a plot of our model's coefficients that an individual has a roughly 50% chance of experiencing chd around age 55.
+
+# Problem 3
+
+## 3a
+
+```{r}
+test = seq(1:100)
+train = seq(101:462)
+```
+
+```{r}
+logfit3 = glm(chd~.-famhist, data=heart, subset=train, family='binomial')
+logfit3.prob = predict(logfit3, heart[test,], type='response') 
+head(logfit3.prob, 10)
+```
+
+## 3b
+
+```{r}
+glm.pred = rep(0,length(test))
+glm.pred[logfit3.prob > 0.45] = 1 # obtained 0.45 threshold through trial and error
+conf.matrix = table(glm.pred, heart[test,]$chd)
+conf.matrix
+misclassification.rate = (conf.matrix[1, 2] + conf.matrix[2, 1]) / length(test)
+misclassification.rate
+```
+Through testing out various values for the threshold, 0.45 as the threshold yielded the lowest misclassification rate of 0.24.
+
+
+## 3c
+
+```{r}
+#rows are predictions, columns are actual
+glm.pred.2 = rep(0,length(test))
+glm.pred.2[logfit3.prob > 0.9] = 1 # obtained 0.9 threshold through trial and error
+conf.matrix.2 = table(glm.pred.2, heart[test,]$chd)
+conf.matrix.2
+false.pos.rate = (conf.matrix.2[2, 1]) / length(test)
+false.pos.rate
+misclassification.rate = (conf.matrix.2[1, 2] + conf.matrix.2[2, 1]) / length(test)
+misclassification.rate
+```
+
+When optimizing for the lowest false positive rate, meaning the model predicted true but the actual data was false, we would want a very high threshold to decrease the likelihood of the model classifying someone as chd, which in turn decreases the likelihood that a type I error. However, this optimization results in a higher misclassification rate, as we are now more likely to see false negative situations, where the model predicts an individual does not have chd even when he or she does actually have it. The misclassification rate here would be 0.40, which is much higher than the previously-computed 0.24 in part (3b).
+
+## 3d
+
+With *logistic models*, we can scale our response to being within 0 and 1. This binary system allows us to guarantee that our response will fall somewhere within this set interval, which gives us a significant advantage for classification. 
+
+On the other hand, *least squares/regularized regression models* are not appropriate for this setting because they are represented by continuous response variables. Thus, they serve as inferior models for classification problems, such as the one in this setting. We want to know whether or not an individual has chd; if we were to use least squares, for instance, we would have to subjectively define the boundaries for the two classification groups (individual has / doesn't have chd).
+
+
+
+
+
+

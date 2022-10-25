@@ -1,0 +1,330 @@
+---
+title: "R Notebook"
+output: html_notebook
+author: "Shiva Neelakantan"
+studentid: 616916317
+---
+
+```{r}
+library(leaps)
+library(ISLR2)
+```
+# Problem 1
+
+## 1a through 1c
+```{r}
+X1 = rnorm(n=100)
+err = rnorm(n=100,mean=0,sd=2)
+
+b0 = 2
+b1 = 6
+b2 = 4
+b3 = 5
+
+Y = b0 + b1*X1 + b2*(X1^2) + b3*(X1^3) + err
+```
+
+## 1d
+```{r}
+df = data.frame(X1, Y)
+idx = sample(1:100, 50, rep=FALSE)
+train.split = df[idx, ]
+test.split = df[-idx, ]
+```
+
+## 1e
+```{r}
+train.mse = c()
+test.mse = c()
+models = c()
+for (i in 1:10) {
+  models[[i]] = lm(Y~poly(X1, i), train.split)
+  train.mse[[i]] = mean((train.split$Y - models[[i]]$fitted.values) ^ 2)
+  
+  y_pred = predict(models[[i]], test.split)
+  test.mse[[i]] = mean((test.split$Y - y_pred) ^ 2)
+}
+```
+## 1f
+```{r}
+plot(seq(1:10),train.mse)
+```
+For the linear and quadratic polynomial models, the MSE is pretty high. However, for the cubic model onward, the MSE is significantly lower. This shows us that we can generate models with much higher training accuracy if we increase the polynomial degree of our training model.
+
+
+## 1g
+```{r}
+plot(seq(1:10), test.mse)
+```
+Similar to the training MSE plot, we can see here that after the first two models, the MSE decreases significantly. In terms of the bias-variance trade-off, we can see that over time, we are starting to over fit the data, because we use the same set of training data for each iteration.
+
+## 1h
+```{r}
+b4 = 9
+b5 = 2
+b6 = 4
+b7 = 7
+err = rnorm(n=100,mean=0,sd=2)
+Ynew = b0 + b1*X1 + b2*X1^2 + b3*X1^3 + b4*1^4 + b5*X1^5 + b6*1^6 + b7*X1^7 + err
+
+df = data.frame(X1, Ynew)
+idx = sample(1:100, 50, rep=FALSE)
+train.split = df[idx, ]
+test.split = df[-idx, ]
+
+train.mse = c()
+test.mse = c()
+models = c()
+for (i in 1:10) {
+  models[[i]] = lm(Ynew~poly(X1, i), train.split)
+  train.mse[[i]] = mean((train.split$Y - models[[i]]$fitted.values) ^ 2)
+  
+  y_pred = predict(models[[i]], test.split)
+  test.mse[[i]] = mean((test.split$Y - y_pred) ^ 2)
+}
+plot(seq(1:10),train.mse)
+plot(seq(1:10), test.mse)
+
+```
+The train MSE curve appears similar to what I expected, as the MSE gradually decreases as we increase the polynomial degree of the model's function. However, the test MSE seems to follow no noticeable pattern. I decided to mess around with the irreducible error constant, and noticed that when I generate a new error, the test MSE values are very different! This increase in variance may be attributed to the higher degree of polynomial in the model's equation.
+
+# Problem 2
+
+## 2a
+```{r}
+prostate = read.table('./prostate.data', header=TRUE)
+head(prostate)
+```
+
+```{r}
+regfit = regsubsets(lpsa~., data=prostate, nbest=1, nvmax=8)
+```
+
+```{r}
+n = dim(prostate)[1]
+regfit.summary = summary(regfit)
+p = rowSums(regfit.summary$which) - 1
+adjr2 = regfit.summary$adjr2
+mallows.cp = regfit.summary$cp
+rss = regfit.summary$rss
+AIC = n * log(rss/n) + 2*p
+BIC = n * log(rss/n) + p*log(n)
+cbind(p, rss, adjr2, mallows.cp, AIC, BIC)
+```
+```{r}
+which.min(AIC)
+which.min(BIC)
+which.min(mallows.cp)
+which.max(adjr2)
+```
+Our four metrics for model selection (AIC, BIC, mallows Cp, adjusted r^2) do not have the same value. AIC and Mallow's Cp are highest for the model with 5 predictors, while BIC and adjr2 each chose models with 3 and 7 predictors, respectively. Thus, we can conclude by majority rule that the 'best' model is the one with 5 predictors. 
+
+## 2b
+```{r}
+train = subset(prostate,train==TRUE)[,1:9]
+test = subset(prostate,train==FALSE)[,1:9]
+regfit.train = regsubsets(lpsa~., data=train, nbest=1, nvmax=8)
+regfit.train.summary = summary(regfit.train)
+
+n = dim(train)[1]
+p = rowSums(regfit.train.summary$which) - 1
+adjr2.2 = regfit.train.summary$adjr2
+mallows.cp2 = regfit.train.summary$cp
+rss2 = regfit.train.summary$rss
+AIC2 = n * log(rss/n) + 2*p
+BIC2 = n * log(rss/n) + p*log(n)
+cbind(p, rss2, adjr2.2, mallows.cp2, AIC2, BIC2)
+```
+```{r}
+which.min(AIC2)
+which.min(BIC2)
+which.min(mallows.cp2)
+which.max(adjr2.2)
+```
+Our AIC, Mallow's Cp, and Adjusted R^2 chose the model with 7 predictors to be the 'best' model. The BIC chose the model with 2 predictors. To determine which model is superior, we can calculate the test MSE on each of them.
+
+```{r}
+model.2 = lm(lpsa~lcavol+lweight, data=train)
+model.7 = lm(lpsa~.-gleason, data=train)
+
+mse.2 = mean((test$lpsa - predict.lm(model.2, test)) ^ 2)
+mse.2
+
+mse.7 = mean((test$lpsa - predict.lm(model.7, test)) ^ 2)
+mse.7
+```
+Model 2 has the lowest Test MSE of the two models recommended by AIC, BIC, Mallow's Cp, and AdjR^2.
+```{r}
+full.test.mse2 = mean((prostate$lpsa - predict.lm(model.2, prostate)) ^ 2)
+full.test.mse2
+```
+The final MSE of model 2 when applied to the entire prostate data set is approximately 0.5347.
+
+## 2c
+```{r}
+library(caret)
+```
+### 2ci
+```{r}
+k = 10
+folds = sample(1:k, nrow(prostate), replace=TRUE)
+val.errors = matrix(NA, k, 8)
+
+for (i in 1:k) {
+  
+  test = prostate[folds==i, ]
+  train = prostate[folds!=i, ]
+  
+  best.fit = regsubsets(lpsa~., train, nbest=1, nvmax=8)
+  for (j in 1:8) {
+    test.matrix = model.matrix(lpsa~., test)
+    mc = coef(best.fit, id=j)
+    ypred = test.matrix[, names(mc)]%*%mc
+    val.errors[i, j] = mean((test$lpsa-ypred)**2)
+  }
+}
+mean.vector = c()
+for (i in 1:8) {
+  mean.vector[[i]] = mean(val.errors[i,])
+}
+mean.vector
+```
+8 CV errors are reported above.
+
+### 2cii
+```{r}
+which.min(mean.vector)
+minCV.err = which.min(mean.vector)
+full.model = regsubsets(lpsa~., prostate, nbest=1, nvmax=8)
+coef(full.model, minCV.err)
+summary(full.model, minCV.err)
+```
+It appears that model 8 is the best, as seen in the summary printed above. 
+
+# Problem 3
+
+## 3a
+K-fold cross-validation is a model selection strategy, in which we split the data set into k folds (k subsets), and then treat each subset as the test set, while the remainder of the data is the training set. Repeat this k times, so that each fold gets to be a test set, and we can ultimately test the model on all of our data.
+
+## 3b
+
+### 3bi
+With k-fold, we can ensure that all the data gets treated as the test set at least once, whereas with validation set approach, we just randomly split the data into training and test once. Validation set approach can cause issues, because our split could contain certain values in the training set, such as outliers for instance, that mislead the model. However, k-fold is more computationally expensive than validation set, because you need to run k tests rather than just one.
+
+### 3bii
+With k-fold, we are still generalizing the data with our folds. We could encounter issues similar to the aforementioned ones in validation set approach (where the data in the specific set may be misleading, or contain many outliers that cause the model to determine correlations incorrectly), within one or more folds. Essentially, we could run into the same issue as validation sets, but within each fold. LOOCV fixes this issue, because we train the model on all the data except for one. This way, we can hollistically look at the entire data set for each test, and each individual datum gets to be the 'test set'. Thus, any issues of a poor randomly allocated fold are eliminated. However, k-fold is better than LOOCV in terms of cost; LOOCV is extremely expensive computationally, as we need to train the model n times, where n is the length of the data set. 
+
+## 3c
+```{r}
+set.seed(1)
+X = rnorm(100)
+err = rnorm(n=100,mean=0,sd=1)
+Y = X - 2 * (X ^ 2)
+```
+
+## 3d
+```{r}
+df = data.frame(X, Y)
+set.seed(42)
+mse.m1 = mse.m2 = mse.m3 = mse.m4 = rep(NA, n)
+for (i in seq(1:n)) {
+  test = df[i, ]
+  train = df[-i, ]
+  
+  m1 = lm(Y~X, train)
+  m2 = lm(Y~poly(X,2), train)
+  m3 = lm(Y~poly(X,3), train)
+  m4 = lm(Y~poly(X,4), train)
+  
+  m1.pred = predict(m1, test)
+  m2.pred = predict(m2, test)
+  m3.pred = predict(m3, test)
+  m4.pred = predict(m4, test)
+  
+  mse.m1[i] = mean((test$Y - m1.pred) ^ 2)
+  mse.m2[i] = mean((test$Y - m2.pred) ^ 2)
+  mse.m3[i] = mean((test$Y - m3.pred) ^ 2)
+  mse.m4[i] = mean((test$Y - m4.pred) ^ 2)
+}
+
+mean(mse.m1)
+mean(mse.m2)
+mean(mse.m3)
+mean(mse.m4)
+```
+
+## 3e
+```{r}
+set.seed(100)
+
+mse.m1 = mse.m2 = mse.m3 = mse.m4 = rep(NA, n)
+for (i in seq(1:n)) {
+  test = df[i, ]
+  train = df[-i, ]
+  
+  m1 = lm(Y~X, train)
+  m2 = lm(Y~poly(X,2), train)
+  m3 = lm(Y~poly(X,3), train)
+  m4 = lm(Y~poly(X,4), train)
+  
+  m1.pred = predict(m1, test)
+  m2.pred = predict(m2, test)
+  m3.pred = predict(m3, test)
+  m4.pred = predict(m4, test)
+  
+  mse.m1[i] = mean((test$Y - m1.pred) ^ 2)
+  mse.m2[i] = mean((test$Y - m2.pred) ^ 2)
+  mse.m3[i] = mean((test$Y - m3.pred) ^ 2)
+  mse.m4[i] = mean((test$Y - m4.pred) ^ 2)
+}
+
+mean(mse.m1)
+mean(mse.m2)
+mean(mse.m3)
+mean(mse.m4)
+```
+
+It appears that the mean mse's are the same in both part 3d and 3e, regardless of the random seed. This makes sense, due to the fact that we are using the same data frame. Thus, the Y and X columns will be the exact same for both parts. 
+
+## 3f
+Of these four models, the one with the lowest LOOCV error was model 2. This makes sense, because my model 2 has a quadratic function (polynomial w/ degree of 2). This is the same as the highest degree in the equation for Y, as defined in part 3a. 
+
+## 3g
+```{r}
+PRESS = function(model, n){
+  res = residuals(model)/(1 - lm.influence(model)$hat)
+  sum(res^2)/n
+}
+
+m1 = lm(Y~X, df)
+PRESS(m1, n)
+
+m2 = lm(Y~poly(X,2), df)
+PRESS(m2,n)
+
+m3 = lm(Y~poly(X,3), df)
+PRESS(m3,n)
+
+m4 = lm(Y~poly(X,4), df)
+PRESS(m4,n)
+
+coefficients(m1)
+coefficients(m2)
+coefficients(m3)
+coefficients(m4)
+```
+The coefficient estimates above are significant, because using LOOCV, we can see that as the degree increases, we can fit better models, since the data is being used more effectively. These results do agree with the conclusions drawn from the cross validation results. 
+We have more evidence for these coefficients by using LOOCV than if we just did plain CV, because CV has much more randomness and unpredictability in model generation when we just do a random 50/50 split (or any percentage split for that matter, such as 80/20, 75/25, etc.)
+Thus, if we were to split the data twice using CV, we could generate two completely different models! However, with LOOCV, this randomness issue is reduced, because each data value has the chance to be the 'test set'. In other words, each datum is used to produce better models.
+
+# Problem 4
+
+## 4a *WRONG, should be FALSE (all metrics will always select the same model).*
+True. Although it is not common, because each method (AIC, BIC, Mallow's Cp, ajdr^2) has a different formula for selecting models, there is a chance that they do not all agree on the model to select every single time. 
+
+## 4b
+False. This would be true if, for instance, the first three predictors for both models were identical, but M4 had an additional predictor. However, because the first three predictors are not identical for both models, we cannot guarantee that M4 will have any lower of an RSS than M3.
+
+## 4c
+True. This would be true, for the opposite reasoning of part 4b. Here, both models share the predictors X4 and X5. Thus, adding new predictor(s), namely X6 and X7, can only reduce the RSS of the model. They cannot make the model any worse than it already is. Thus, M4 must have an RSS less than or equal to M2.
+

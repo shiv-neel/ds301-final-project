@@ -1,0 +1,298 @@
+---
+title: "Shiva_Neelakantan_HW8.Rmd"
+author: "Shiva Neelakantan"
+date: '2022-04-05'
+output: html_document
+---
+
+# Problem 1: Bootstrap
+
+## 1a
+
+```{r}
+library(ISLR2)
+```
+
+```{r}
+beta0_star = summary(lm(medv~crim+age,data=Boston))$coef[1,1]
+se_b0_star = summary(lm(medv~crim+age,data=Boston))$coef[1,2]
+n = dim(Boston)[1]
+B = 500
+m = 100
+Fstar = rep(0,B)
+beta0_m = rep(0,m)
+
+for(b in 1:B){
+  index = sample(1:n,n,replace=TRUE)
+  bootsample=Boston[index,]
+  fit = lm(medv~crim+age,data=bootsample)
+  beta0 =  coef(fit)[1]
+  for(i in 1:m){
+    index2 = sample(index,n,replace=TRUE)
+    bootsample2 = Boston[index2,]
+    fit2 = lm(medv~crim+age,data=bootsample2)
+    beta0_m[i] = coef(fit2)[1]
+  }
+  se_b0 = sqrt(sum((beta0_m-mean(beta0_m))^2)/(m-1))
+
+  Fstar[b] = (beta0 - beta0_star)/se_b0
+}
+
+```
+
+```{r}
+#95% confidence interval
+beta0_star + quantile(Fstar,0.025)*se_b0_star
+beta0_star + quantile(Fstar,0.975)*se_b0_star
+```
+
+```{r}
+#bootstrapped distribution
+hist(Fstar, main='Bootstrapped Distribution of F^~(b)')
+```
+
+## 1b
+
+```{r}
+confint(lm(medv~crim+age,data=Boston))
+```
+The 95% CI obtained by boostrapping is slightly narrower than the one obtained from the analytical formula; nonetheless, they are still very similar in their range of values.
+
+
+## 1c
+
+```{r}
+medv.median = median(Boston$medv, na.rm=TRUE)
+medv.median
+```
+
+## 1d
+
+```{r}
+B = 2000
+median_boot = rep(0,2000)
+for(b in 1:B){
+  index = sample(1:n,n,replace=TRUE)
+  bootsample = Boston[index,]
+  median_boot[b] = median(bootsample$medv, na.rm=TRUE)
+}
+medSE = sqrt(sum((median_boot-mean(median_boot))^2)/(B-1))
+medSE
+```
+
+## 1e
+
+```{r}
+med.star = median(Boston$medv, na.rm=TRUE)
+se.med.star = medSE
+
+B = 1000
+m = 100
+n = dim(Boston)[1]
+Fstar = rep(0, B)
+med_m = rep(0, m)
+
+for(b in 1:B){
+  index = sample(1:n, n, replace=TRUE)
+  bsample1 = Boston[index, ]
+  med = median(bsample1$medv, na.rm=TRUE)
+  
+  for(i in 1:m){
+    index2 = sample(index, n, replace=TRUE)
+    bsample2 = Boston[index2, ]
+    med_m[i] = median(bsample2$medv, na.rm=TRUE)
+  }
+  
+  se_med = sqrt(sum((med_m - mean(med_m))^2)/(m-1))
+  Fstar[b] = (med - med.star)/se_med
+}
+
+```
+
+```{r}
+hist(Fstar, main='Bootstrap distribution of Fstar')
+med.star + quantile(Fstar, 0.025)*se.med.star
+med.star + quantile(Fstar, 0.975)*se.med.star
+```
+## 1f
+
+```{r}
+quantile(Boston$medv, 0.10)
+```
+
+## 1g
+
+```{r}
+B = 1000
+m = 100
+n = dim(Boston)[1]
+
+mu_10_arr = rep(0, m)
+se_arr = rep(0, B)
+
+for (b in 1:B) {
+  idx = sample(1:n, n, replace=TRUE)
+  bootsample = Boston[idx, ]
+  mu_10 = quantile(bootsample$medv, 0.10)
+  for (i in 1:m) {
+    idx2 = sample(idx, n, replace=TRUE)
+    bootsample2 = Boston[idx2, ]
+    mu_10_v2 = quantile(bootsample2$medv, 0.10)
+    mu_10_arr[i] = mu_10_v2
+  }
+  se_mu = sqrt(sum((mu_10_arr - mean(mu_10_arr))^2)/(m-1))
+  se_arr[b] = (mu_10-(quantile(Boston$medv, 0.10)))/se_mu
+}
+mean(se_arr)
+```
+The standard error of medv at the 10th percentile is rougly 0.1516.
+
+# Problem 2: Email Spam
+
+```{r}
+spam = read.csv('C:/Users/shivn/Downloads/spambase.data', header=FALSE)
+```
+
+## 2a
+
+```{r}
+library(dplyr)
+df = spam %>% count(V58)
+proportion = df[[2]][[2]]/nrow(spam)
+proportion
+```
+
+## 2b
+
+```{r}
+n = nrow(spam)
+train = sample(1:n, n/2, replace=FALSE)
+test = -train
+df.train = spam[train, ]
+df.test = spam[-train, ]
+
+train.proportion = (df.train %>% count(V58))[[2]][[2]] / (n/2)
+train.proportion
+
+test.proportion = (df.test %>% count(V58))[[2]][[2]] / (n/2)
+test.proportion
+```
+
+## 2c
+
+```{r}
+glm.fit = glm(V58~., data=spam, subset=train, family='binomial')
+glm.prob = predict(glm.fit, spam[test, ], type='response')
+head(glm.prob, 10)
+head(spam[test, ], 10)$V58
+```
+
+## 2d
+
+```{r}
+glm.pred = rep(1, length(test))
+glm.pred[glm.prob <= 0.5] = 0
+conf.matrix = table(glm.pred, spam[test, ]$V58)
+conf.matrix # rows are preds, cols are actual
+```
+
+```{r}
+misclassification.rate = 1 - mean(glm.pred == spam[test, ]$V58)
+misclassification.rate
+
+false.neg.rate = conf.matrix[1,2] / length(test)
+false.neg.rate
+
+false.pos.rate = conf.matrix[2,1] / length(test)
+false.pos.rate
+```
+
+## 2e
+
+Reporting a meaningful email as spam is a more egregious mistake in my opinion, because I have had situations where I never saw a very important email from a recruiter or other professional for more than a month due to it being marked as spam. 
+
+To accommodate this, we would want to raise the classifier's activation threshold for what it classifies as spam. Right now, it only needs to be greater than 0.5 to be considered a spam email. If we raise this activation to say, 0.7, then the classifier is less likely to report as many emails as spam, because it will require a higher probability to consider the email to be spam.
+
+
+# Problem 3: Weekly data set
+
+## 3a
+
+```{r}
+head(Weekly)
+plot(Weekly$Year, Weekly$Lag5)
+plot(Weekly$Year, Weekly$Volume)
+```
+The percentage return columns (Lag1 through Lag5) show pretty similar patterns across time. The volume of shares traded grew exponentially up til 2008, and then started falling off. This is probably attributed to the 2008 recession.
+
+## 3b
+
+```{r}
+logreg = glm(Direction~Lag1+Lag2+Lag3+Lag4+Lag5+Volume, data=Weekly, family='binomial')
+summary(logreg)
+```
+The Lag2 coefficient appears to be the most significant predictor (excluding beta0). This is due to its very low alpha value of 0.0296.
+
+## 3c
+
+```{r}
+logregpred = predict(logreg, Weekly, type='response')
+glm.pred = rep(1, nrow(Weekly))
+glm.pred[logregpred <= 0.5] = 0
+conf.matrix = table(glm.pred, Weekly$Direction)
+conf.matrix
+
+false.neg.rate = conf.matrix[1,2] / nrow(Weekly)
+false.neg.rate
+
+false.pos.rate = conf.matrix[2,1] / nrow(Weekly)
+false.pos.rate
+```
+The false negative rate, or contextually, the rate at which the model believes the market should perform poorly but actually goes up, is very low, at 0.044. However, the false positive rate, or contextually, the rate at which the model believes the market should perform well but actually goes down, is surprisingly high, at 0.395. The model's inaccuracy is strikingly similar to how humans tend to mistime the market -- we hear more stories of people believing the market is going to boom, and then the opposite occurring, than we do of the inverse. 
+
+## 3d
+
+```{r}
+years.90.to.08 = Weekly %>% filter(Year >= 1990 & Year <= 2008)
+years.09.and.10 = Weekly %>% filter(Year == 2009 | Year == 2010)
+
+logreg.lag2 = glm(Direction~Lag2, data=years.90.to.08, family='binomial')
+logregpred = predict(logreg.lag2, years.09.and.10, type='response')
+glm.pred = rep(1, nrow(years.09.and.10))
+glm.pred[logregpred <= 0.5] = 0
+conf.matrix = table(glm.pred, years.09.and.10$Direction)
+conf.matrix
+pred.acc = (conf.matrix[1, 1] + conf.matrix[2, 2]) / nrow(years.09.and.10)
+pred.acc
+```
+
+# Problem 4: Limitations of Logistic Regression
+
+## 4a
+
+```{r}
+x = c(-2, 5, -1, 10, 5)
+red = 1
+blue = 0
+y = c(red, blue, red, blue, blue)
+df = data.frame(x, y)
+plot(x, y)
+```
+We observe what looks like a reversed sigmoid/logistic regression curve. The data does appear well separated, as the red values are all in the top left, and the blue ones are in the bottom right.
+
+## 4b
+
+```{r}
+limlogreg = glm(y~x, df, family='binomial')
+summary(limlogreg)
+```
+We receive the following warning message: `Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred`. 
+
+
+## 4c
+
+According to the summary of our logistic regression model in part (4b), the coefficients we want to use to maximize the likelihood estimation of our model are b0 = 15.38 and b1 = -7.76. 
+
+## 4d
+
+One limitation with the logistic regression model is that its precision is very low. We see this particularly from the standard errors reflected in the coefficients calculated by our model's summary in part (4b).
